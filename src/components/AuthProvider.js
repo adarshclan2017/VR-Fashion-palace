@@ -44,12 +44,16 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (loading) return;
 
-    // Don't redirect on login page
+    // Public pages: login & public customer bill page
     if (pathname === '/login') {
       if (user) {
         // Already logged in, redirect to appropriate home
         router.replace(user.role === 'admin' ? '/' : '/billing');
       }
+      return;
+    }
+
+    if (pathname.startsWith('/bill/')) {
       return;
     }
 
@@ -93,6 +97,32 @@ export function AuthProvider({ children }) {
     if (!access) return true;
     return access.roles.includes(user.role);
   };
+
+  const isPublicPage = pathname === '/login' || pathname.startsWith('/bill/');
+
+  // While checking auth on a protected page, show a smooth loading state instead of flashing protected content
+  if (loading && !isPublicPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Verifying Session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not logged in and on a protected page, show redirecting state
+  if (!loading && !user && !isPublicPage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="mt-2 text-xs font-bold text-slate-500">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, canAccess, checkAuth }}>
