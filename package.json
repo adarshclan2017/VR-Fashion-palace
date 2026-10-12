@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "db:export": "node scripts/export-data.js",
+    "db:import": "node scripts/import-data.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

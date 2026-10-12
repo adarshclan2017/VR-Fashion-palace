@@ -1,0 +1,38 @@
+[
+  {
+    "_id": "6acbbedce76aecabfe215463",
+    "username": "admin",
+    "password": "$2b$10$LzAW2Lf/48L0Ulj97Dc3/OlFjAQvuKcksLhOHCk1WxGH656gdQJ.i",
+    "displayName": "Shop Owner (Admin)",
+    "role": "admin",
+    "isActive": true,
+    "lastLogin": "2026-10-12T13:23:27.107Z",
+    "createdAt": "2026-10-11T16:52:44.199Z",
+    "updatedAt": "2026-10-12T13:23:27.107Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acbbedce76aecabfe215466",
+    "username": "employee",
+    "password": "$2b$10$e/33ffLZuX1NHGKugEjmcuvq28VdKyN6p.1ceUgTpXsPS1wASdWFi",
+    "displayName": "Counter Staff",
+    "role": "employee",
+    "isActive": true,
+    "lastLogin": "2026-10-12T13:23:27.066Z",
+    "createdAt": "2026-10-11T16:52:44.433Z",
+    "updatedAt": "2026-10-12T13:23:27.092Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acbc6bee76aecabfe215ee9",
+    "username": "adarsh",
+    "password": "$2b$10$o1uaajMtU30OEH3MKItnVO/jktzHor3CIPplnmGlK0FmNo7rZpNPK",
+    "displayName": "Adarsh Cashier",
+    "role": "employee",
+    "isActive": true,
+    "lastLogin": "2026-10-12T13:17:45.566Z",
+    "createdAt": "2026-10-11T17:26:22.256Z",
+    "updatedAt": "2026-10-12T13:17:45.570Z",
+    "__v": 0
+  }
+]
