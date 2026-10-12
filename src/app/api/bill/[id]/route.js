@@ -14,8 +14,15 @@ export async function GET(request, context) {
       return NextResponse.json({ success: false, error: 'Bill identifier is required' }, { status: 400 });
     }
 
-    // Search by invoiceNumber (case-insensitive) or by MongoDB ObjectId
-    let sale = await Sale.findOne({ invoiceNumber: id.toUpperCase() });
+    // Search by invoiceNumber (case-insensitive, exact, or numeric pad) or by MongoDB ObjectId
+    let queryConditions = [
+      { invoiceNumber: id },
+      { invoiceNumber: id.toUpperCase() },
+    ];
+    if (/^\d+$/.test(id)) {
+      queryConditions.push({ invoiceNumber: String(parseInt(id, 10)).padStart(4, '0') });
+    }
+    let sale = await Sale.findOne({ $or: queryConditions });
 
     if (!sale && id.match(/^[0-9a-fA-F]{24}$/)) {
       sale = await Sale.findById(id);

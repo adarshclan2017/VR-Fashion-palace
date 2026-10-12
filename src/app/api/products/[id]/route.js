@@ -65,8 +65,11 @@ export async function DELETE(request, context) {
     await connectDB();
     const params = await context.params;
     const id = params?.id;
-    await Product.findByIdAndUpdate(id, { isActive: false });
-    return NextResponse.json({ success: true, message: 'Product archived successfully' });
+    const product = await Product.findByIdAndDelete(id);
+    if (!product) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, message: `"${product.name}" deleted permanently` });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

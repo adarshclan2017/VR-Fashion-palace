@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   User,
   Eye,
-  EyeOff
+  EyeOff,
+  Trash2,
 } from 'lucide-react';
 
 export default function AdminUsersPage() {
@@ -40,6 +41,10 @@ export default function AdminUsersPage() {
   const [resetTargetName, setResetTargetName] = useState('');
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [resetting, setResetting] = useState(false);
+
+  // Delete user modal state
+  const [deleteUser, setDeleteUser] = useState(null); // { _id, displayName }
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = async () => {
     try {
@@ -158,6 +163,30 @@ export default function AdminUsersPage() {
       setError('Password reset failed: ' + err.message);
     } finally {
       setResetting(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteUser) return;
+    setDeleting(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/auth/users/${deleteUser._id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        setSuccess(`User "${deleteUser.displayName}" deleted permanently.`);
+        setDeleteUser(null);
+        fetchUsers();
+        setTimeout(() => setSuccess(''), 4000);
+      } else {
+        setError(data.error || 'Failed to delete user');
+        setDeleteUser(null);
+      }
+    } catch (err) {
+      setError('Delete failed: ' + err.message);
+      setDeleteUser(null);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -375,6 +404,16 @@ export default function AdminUsersPage() {
                               {u.isActive ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
                             </button>
                           )}
+
+                          {!isCurrent && (
+                            <button
+                              onClick={() => setDeleteUser({ _id: u._id, displayName: u.displayName })}
+                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition"
+                              title="Delete user permanently"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -572,6 +611,47 @@ export default function AdminUsersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {deleteUser && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-red-100 p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900">Delete User Account</h3>
+                <p className="text-xs text-red-600 font-semibold">This action is permanent and cannot be undone</p>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-600">
+              Are you sure you want to permanently delete{' '}
+              <span className="font-bold text-slate-900">{deleteUser.displayName}</span>?
+              Their account and login access will be removed immediately.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setDeleteUser(null)}
+                disabled={deleting}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                disabled={deleting}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-sm shadow-red-600/20 transition disabled:opacity-50"
+              >
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>{deleting ? 'Deleting...' : 'Yes, Delete Permanently'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

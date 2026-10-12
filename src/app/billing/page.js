@@ -18,7 +18,6 @@ import {
   CreditCard,
   Banknote,
   Percent,
-  Sparkles,
   ShoppingBag,
   Send,
   SlidersHorizontal,
@@ -32,6 +31,7 @@ import {
   Download,
   Share2,
 } from 'lucide-react';
+
 
 export default function BillingPage() {
   const [products, setProducts] = useState([]);
@@ -330,23 +330,60 @@ export default function BillingPage() {
     window.print();
   };
 
-  // WhatsApp share link generator (includes store branding, bill details & digital bill link)
+  // Helper to build a complete WhatsApp message with boutique branding, items list, and bill link
+  const buildWhatsAppMessage = (sale, billUrl) => {
+    const shopName = 'VR FASHION PALACE';
+    const customerName = sale.customer?.name || 'Valued Customer';
+    const inv = sale.invoiceNumber;
+    const total = Number(sale.grandTotal || 0).toLocaleString('en-IN');
+    const payment = sale.paymentMode || 'Cash';
+    const date = sale.createdAt
+      ? new Date(sale.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : new Date().toLocaleDateString('en-IN');
+
+    const itemsSummary = (sale.items || [])
+      .map((item, idx) => `${idx + 1}. ${item.name} (${item.size || 'Free Size'}) x ${item.quantity} = ₹${Number(item.total || item.quantity * item.rate).toLocaleString('en-IN')}`)
+      .join('\n');
+
+    return (
+      `👗 *${shopName}* 🛍️\n` +
+      `_Women & Kids Wear Boutique_\n\n` +
+      `🙏 *Thank you for shopping with us!*\n\n` +
+      `🧾 *Bill No:* ${inv}\n` +
+      `📅 *Date:* ${date}\n` +
+      `👤 *Customer:* ${customerName}\n\n` +
+      `*Items Purchased:*\n${itemsSummary}\n\n` +
+      `💰 *Grand Total:* ₹${total} (${payment})\n\n` +
+      `📱 *View / Download Digital E-Bill:*\n${billUrl}\n\n` +
+      `Visit us again for latest Women & Kids fashion collections! ✨`
+    );
+  };
+
+  // WhatsApp share link generator
   const getWhatsAppShareUrl = () => {
     if (!lastSale) return '';
-    const shopName = 'VR FASHION PALACE (Women & Kids Wear)';
     const phone = (sharePhone || lastSale.customer?.phone || '').replace(/\D/g, '');
     const billUrl = getCustomerBillUrl(lastSale);
-    const text = encodeURIComponent(
-      `👗 *${shopName}* 🛍️\n` +
-      `Thank you for shopping with us!\n\n` +
-      `*Bill No:* ${lastSale.invoiceNumber}\n` +
-      `*Customer:* ${lastSale.customer?.name || 'Valued Customer'}\n` +
-      `*Items:* ${lastSale.items?.length} items\n` +
-      `*Total Paid:* ₹${lastSale.grandTotal.toLocaleString('en-IN')} (${lastSale.paymentMode})\n\n` +
-      `📱 *View / Download Your Digital E-Bill:* \n${billUrl}\n\n` +
-      `Visit us again for latest Women & Kids fashion collections!`
-    );
-    return phone ? `https://wa.me/91${phone.slice(-10)}?text=${text}` : `https://wa.me/?text=${text}`;
+    const text = encodeURIComponent(buildWhatsAppMessage(lastSale, billUrl));
+    return phone && phone.length >= 10
+      ? `https://api.whatsapp.com/send?phone=91${phone.slice(-10)}&text=${text}`
+      : `https://api.whatsapp.com/send?text=${text}`;
+  };
+
+  // Direct click handler for WhatsApp sharing with validation
+  const handleShareWhatsAppLink = () => {
+    if (!lastSale) return;
+    const phone = (sharePhone || lastSale.customer?.phone || '').replace(/\D/g, '');
+    if (!phone || phone.length < 10) {
+      alert('⚠️ Please enter a valid 10-digit customer mobile number in the field above.');
+      return;
+    }
+
+    const cleanPhone = phone.slice(-10);
+    const billUrl = getCustomerBillUrl(lastSale);
+    const text = encodeURIComponent(buildWhatsAppMessage(lastSale, billUrl));
+    const waUrl = `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${text}`;
+    window.open(waUrl, '_blank');
   };
 
   // Capture receipt image via html2canvas and share/copy to WhatsApp
@@ -584,40 +621,6 @@ export default function BillingPage() {
               </div>
             )}
 
-            {/* Quick Filter Tags / Suggestion Chips */}
-            <div className="flex items-center gap-1.5 overflow-x-auto text-xs pb-0.5 scrollbar-none">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
-                Quick Search:
-              </span>
-              {[
-                { label: '👗 Sarees', term: 'Saree' },
-                { label: '✨ Kurtis', term: 'Kurti' },
-                { label: '🎀 Kids Frocks', term: 'Frock' },
-                { label: '👦 Boys Sets', term: 'Boys' },
-                { label: '👶 Rompers', term: 'Romper' },
-                { label: '💃 Lehengas', term: 'Lehenga' },
-                { label: '👖 Bottoms', term: 'Leggings' },
-              ].map((chip) => {
-                const isActive = search.toLowerCase() === chip.term.toLowerCase();
-                return (
-                  <button
-                    key={chip.term}
-                    type="button"
-                    onClick={() => {
-                      if (isActive) setSearch('');
-                      else setSearch(chip.term);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold shrink-0 transition ${
-                      isActive
-                        ? 'bg-rose-600 text-white font-bold shadow-sm'
-                        : 'bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-700'
-                    }`}
-                  >
-                    {chip.label}
-                  </button>
-                );
-              })}
-            </div>
 
             {/* Section Filter Pills (Horizontal Scrollable) - Active when search is empty */}
             {!search.trim() && (
@@ -1277,16 +1280,15 @@ export default function BillingPage() {
                 </button>
 
                 {/* 2. Send WhatsApp Link */}
-                <a
-                  href={getWhatsAppShareUrl()}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 text-center"
-                  title="Open WhatsApp chat with bill summary and digital e-bill link"
+                <button
+                  type="button"
+                  onClick={handleShareWhatsAppLink}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 text-center cursor-pointer"
+                  title="Send digital e-bill link & itemized receipt directly to customer's WhatsApp"
                 >
                   <Send className="w-4 h-4" />
                   <span>WhatsApp Link</span>
-                </a>
+                </button>
 
                 {/* 3. Send WhatsApp Image */}
                 <button

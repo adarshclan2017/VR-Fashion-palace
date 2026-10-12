@@ -5,15 +5,11 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import {
-  Sparkles,
   LayoutDashboard,
   Receipt,
   Layers,
   BarChart3,
   FileText,
-  Database,
-  CheckCircle2,
-  Loader2,
   LogOut,
   Shield,
   User,
@@ -27,8 +23,6 @@ import {
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout, canAccess } = useAuth();
-  const [seeding, setSeeding] = useState(false);
-  const [seedSuccess, setSeedSuccess] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -47,27 +41,6 @@ export default function Navbar() {
   // Filter links based on user role
   const navLinks = allNavLinks.filter((link) => canAccess(link.href));
 
-  const handleSeed = async () => {
-    if (!confirm('This will load fresh Women & Kids Wear catalog and 28 past sales bills for VR Fashion Palace. Proceed?')) {
-      return;
-    }
-    setSeeding(true);
-    try {
-      const res = await fetch('/api/seed', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setSeedSuccess(true);
-        setTimeout(() => setSeedSuccess(false), 3000);
-        window.location.reload();
-      } else {
-        alert('Seeding error: ' + data.error);
-      }
-    } catch (err) {
-      alert('Seeding failed: ' + err.message);
-    } finally {
-      setSeeding(false);
-    }
-  };
 
   const handleLogout = async () => {
     setShowUserMenu(false);
@@ -132,24 +105,6 @@ export default function Navbar() {
 
             {/* Right Section Actions */}
             <div className="flex items-center gap-2 sm:gap-3">
-              {/* Load Sample Data (Admin Only) */}
-              {user.role === 'admin' && (
-                <button
-                  onClick={handleSeed}
-                  disabled={seeding}
-                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50/50 hover:bg-rose-100/70 text-rose-800 text-xs font-bold transition disabled:opacity-50"
-                  title="Reload sample Women & Kids products"
-                >
-                  {seeding ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-rose-600" />
-                  ) : seedSuccess ? (
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  ) : (
-                    <Sparkles className="w-3.5 h-3.5 text-rose-500" />
-                  )}
-                  <span>{seeding ? 'Loading...' : seedSuccess ? 'Ready!' : 'Demo Data'}</span>
-                </button>
-              )}
 
               {/* Quick POS New Bill Button */}
               <Link
@@ -266,20 +221,7 @@ export default function Navbar() {
               })}
             </div>
 
-            {user.role === 'admin' && (
-              <div className="pt-2">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleSeed();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-800 text-xs font-bold"
-                >
-                  <Sparkles className="w-4 h-4 text-rose-500" />
-                  <span>Reload Women & Kids Demo Data</span>
-                </button>
-              </div>
-            )}
+
 
             <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
               <div className="text-xs">

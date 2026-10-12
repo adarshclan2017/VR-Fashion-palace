@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Sale from '@/models/Sale';
 import Product from '@/models/Product';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function GET(request) {
   try {
@@ -56,12 +57,23 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: 'At least one item is required' }, { status: 400 });
     }
 
-    // Auto generate sequential invoice number: INV-YYMM-XXXX
-    const count = await Sale.countDocuments();
-    const now = new Date();
-    const yy = now.getFullYear().toString().slice(-2);
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const invoiceNumber = `INV-${yy}${mm}-${String(count + 1).padStart(4, '0')}`;
+    // Auto generate continuous sequential invoice number: 0001, 0002, 0003...
+    // Does NOT reset on new day - continues perpetually from highest existing bill number
+    const salesWithNumbers = await Sale.find({}, { invoiceNumber: 1 }).lean();
+    let maxNum = 0;
+    for (const s of salesWithNumbers) {
+      if (s.invoiceNumber) {
+        const match = s.invoiceNumber.match(/(\d+)$/);
+        if (match) {
+          const val = parseInt(match[1], 10);
+          if (!isNaN(val) && val > maxNum) {
+            maxNum = val;
+          }
+        }
+      }
+    }
+    const nextSeq = maxNum + 1;
+    const invoiceNumber = String(nextSeq).padStart(4, '0');
 
     let subtotal = 0;
     let totalDiscount = 0;
@@ -142,6 +154,19 @@ export async function POST(request) {
     const grandTotal = Math.round(subtotal);
     const roundOff = Math.round((grandTotal - subtotal) * 100) / 100;
 
+    // Get the employee who created this bill
+    let createdBy = { userId: '', username: '', displayName: 'Admin' };
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        createdBy = {
+          userId:      String(user._id || ''),
+          username:    user.username || '',
+          displayName: user.name || user.username || 'Admin',
+        };
+      }
+    } catch (_) {}
+
     // Create and save Sale in MongoDB
     const sale = new Sale({
       invoiceNumber,
@@ -160,6 +185,7 @@ export async function POST(request) {
       paymentMode: paymentMode || 'UPI',
       paymentStatus: paymentStatus || 'Paid',
       notes: notes || 'Thank you for shopping at VR Fashion Palace!',
+      createdBy,
     });
 
     await sale.save();

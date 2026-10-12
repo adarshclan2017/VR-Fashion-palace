@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   FileText,
   Search,
@@ -21,9 +21,16 @@ import {
   Copy,
   Check,
   ExternalLink,
+  TrendingUp,
+  Receipt,
 } from 'lucide-react';
 
 export default function InvoicesPage() {
+  // ── Default to TODAY ───────────────────────────────────────────────
+  const todayStr = () => new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [viewMode, setViewMode] = useState('day'); // 'day' | 'all'
+
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -61,17 +68,17 @@ export default function InvoicesPage() {
   const loadSales = async () => {
     setLoading(true);
     try {
-      let url = '/api/sales';
       const params = new URLSearchParams();
       if (search) params.append('q', search);
       if (paymentFilter !== 'All') params.append('paymentMode', paymentFilter);
-      if (params.toString()) url += `?${params.toString()}`;
-
-      const res = await fetch(url);
-      const json = await res.json();
-      if (json.success) {
-        setSales(json.sales || []);
+      // Date filter — only for day mode
+      if (viewMode === 'day') {
+        params.append('startDate', selectedDate);
+        params.append('endDate', selectedDate);
       }
+      const res = await fetch(`/api/sales?${params.toString()}`);
+      const json = await res.json();
+      if (json.success) setSales(json.sales || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -79,14 +86,53 @@ export default function InvoicesPage() {
     }
   };
 
-  useEffect(() => {
-    loadSales();
-  }, [paymentFilter]);
+  useEffect(() => { loadSales(); }, [paymentFilter, selectedDate, viewMode]);
+
+  // Date navigation helpers
+  const shiftDay = (delta) => {
+    const d = new Date(selectedDate);
+    d.setDate(d.getDate() + delta);
+    setSelectedDate(d.toISOString().slice(0, 10));
+    setViewMode('day');
+  };
+  const isToday = selectedDate === todayStr();
+  const formattedDate = new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     loadSales();
   };
+
+  // ── Group sales by date and compute daily totals ──────────────────────────
+  const groupedSales = useMemo(() => {
+    const today = new Date();
+    const todayKey = today.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+    const map = {};
+    sales.forEach((s) => {
+      const d = new Date(s.createdAt);
+      const key = d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const label = key === todayKey
+        ? 'Today'
+        : d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      if (!map[key]) map[key] = { label, dateKey: key, sales: [], total: 0, count: 0 };
+      map[key].sales.push(s);
+      map[key].total += s.grandTotal || 0;
+      map[key].count += 1;
+    });
+
+    // Sort groups newest first
+    return Object.values(map).sort((a, b) => {
+      const [da, ma, ya] = a.dateKey.split('/').map(Number);
+      const [db, mb, yb] = b.dateKey.split('/').map(Number);
+      return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
+    });
+  }, [sales]);
+
+  // Today's totals
+  const todayGroup = groupedSales[0]?.label === 'Today' ? groupedSales[0] : null;
 
   const getCustomerBillUrl = (inv) => {
     if (!inv) return '';
@@ -101,23 +147,60 @@ export default function InvoicesPage() {
     window.print();
   };
 
-  // WhatsApp share link generator with direct customer e-bill link
+  // Helper to build a complete WhatsApp message with boutique branding, items list, and bill link
+  const buildWhatsAppMessage = (sale, billUrl) => {
+    const shopName = 'VR FASHION PALACE';
+    const customerName = sale.customer?.name || 'Valued Customer';
+    const inv = sale.invoiceNumber;
+    const total = Number(sale.grandTotal || 0).toLocaleString('en-IN');
+    const payment = sale.paymentMode || 'Cash';
+    const date = sale.createdAt
+      ? new Date(sale.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+      : new Date().toLocaleDateString('en-IN');
+
+    const itemsSummary = (sale.items || [])
+      .map((item, idx) => `${idx + 1}. ${item.name} (${item.size || 'Free Size'}) x ${item.quantity} = ₹${Number(item.total || item.quantity * item.rate).toLocaleString('en-IN')}`)
+      .join('\n');
+
+    return (
+      `👗 *${shopName}* 🛍️\n` +
+      `_Women & Kids Wear Boutique_\n\n` +
+      `🙏 *Thank you for shopping with us!*\n\n` +
+      `🧾 *Bill No:* ${inv}\n` +
+      `📅 *Date:* ${date}\n` +
+      `👤 *Customer:* ${customerName}\n\n` +
+      `*Items Purchased:*\n${itemsSummary}\n\n` +
+      `💰 *Grand Total:* ₹${total} (${payment})\n\n` +
+      `📱 *View / Download Digital E-Bill:*\n${billUrl}\n\n` +
+      `Visit us again for latest Women & Kids fashion collections! ✨`
+    );
+  };
+
+  // WhatsApp share link generator
   const getWhatsAppShareUrl = (inv) => {
     if (!inv) return '';
-    const shopName = 'VR FASHION PALACE (Women & Kids Wear)';
     const phone = (sharePhone || inv.customer?.phone || '').replace(/\D/g, '');
     const billUrl = getCustomerBillUrl(inv);
-    const text = encodeURIComponent(
-      `👗 *${shopName}* 🛍️\n` +
-      `Thank you for shopping with us!\n\n` +
-      `*Bill No:* ${inv.invoiceNumber}\n` +
-      `*Customer:* ${inv.customer?.name || 'Customer'}\n` +
-      `*Items:* ${inv.items?.length} items\n` +
-      `*Amount Paid:* ₹${inv.grandTotal?.toLocaleString('en-IN')} (${inv.paymentMode})\n\n` +
-      `📱 *View / Download Your Digital E-Bill:* \n${billUrl}\n\n` +
-      `Visit us again for latest Women & Kids fashion collections!`
-    );
-    return phone ? `https://wa.me/91${phone.slice(-10)}?text=${text}` : `https://wa.me/?text=${text}`;
+    const text = encodeURIComponent(buildWhatsAppMessage(inv, billUrl));
+    return phone && phone.length >= 10
+      ? `https://api.whatsapp.com/send?phone=91${phone.slice(-10)}&text=${text}`
+      : `https://api.whatsapp.com/send?text=${text}`;
+  };
+
+  // Direct click handler for WhatsApp sharing with validation
+  const handleShareWhatsAppLink = (inv) => {
+    if (!inv) return;
+    const phone = (sharePhone || inv.customer?.phone || '').replace(/\D/g, '');
+    if (!phone || phone.length < 10) {
+      alert('⚠️ Please enter a valid 10-digit customer mobile number in the field above.');
+      return;
+    }
+
+    const cleanPhone = phone.slice(-10);
+    const billUrl = getCustomerBillUrl(inv);
+    const text = encodeURIComponent(buildWhatsAppMessage(inv, billUrl));
+    const waUrl = `https://api.whatsapp.com/send?phone=91${cleanPhone}&text=${text}`;
+    window.open(waUrl, '_blank');
   };
 
   // Capture receipt image via html2canvas and share/copy to WhatsApp
@@ -285,6 +368,96 @@ export default function InvoicesPage() {
         </button>
       </div>
 
+      {/* ── Date Navigation Bar ── */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {/* Prev Day */}
+          <button
+            onClick={() => shiftDay(-1)}
+            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700 transition"
+          >
+            ‹
+          </button>
+
+          {/* Date Picker */}
+          <input
+            type="date"
+            value={selectedDate}
+            max={todayStr()}
+            onChange={(e) => { setSelectedDate(e.target.value); setViewMode('day'); }}
+            className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:ring-1 focus:ring-rose-500 focus:outline-none"
+          />
+
+          {/* Next Day (disabled if today) */}
+          <button
+            onClick={() => shiftDay(1)}
+            disabled={isToday}
+            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center font-bold text-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            ›
+          </button>
+
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+            isToday && viewMode === 'day' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {viewMode === 'all' ? 'All Dates' : (isToday ? '📅 Today' : formattedDate)}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {!isToday && viewMode === 'day' && (
+            <button
+              onClick={() => { setSelectedDate(todayStr()); setViewMode('day'); }}
+              className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition"
+            >
+              Jump to Today
+            </button>
+          )}
+          <button
+            onClick={() => setViewMode(viewMode === 'all' ? 'day' : 'all')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border ${
+              viewMode === 'all'
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            {viewMode === 'all' ? '🗓 All Bills' : 'View All Dates'}
+          </button>
+        </div>
+      </div>
+
+      {/* Today's Summary Banner */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-gradient-to-br from-rose-600 to-pink-600 rounded-2xl p-4 text-white shadow-md col-span-2 sm:col-span-2 flex items-center justify-between">
+          <div>
+            <p className="text-xs font-bold text-rose-100 uppercase tracking-wider">
+              {isToday && viewMode === 'day' ? "Today's Collection" : viewMode === 'all' ? 'All Time Collection' : 'Selected Date Collection'}
+            </p>
+            <p className="text-2xl sm:text-3xl font-black mt-0.5">
+              ₹{sales.reduce((s, x) => s + (x.grandTotal || 0), 0).toLocaleString('en-IN')}
+            </p>
+            <p className="text-xs text-rose-100 mt-1 font-medium">{sales.length} bills generated</p>
+          </div>
+          <Receipt className="w-10 h-10 text-white/20" />
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Bills Count</p>
+          <p className="text-2xl font-black text-slate-900 mt-1">{sales.length}</p>
+          <p className="text-[11px] text-slate-400 mt-1 font-medium">
+            {viewMode === 'day' ? (isToday ? 'Today' : formattedDate.split(',')[0]) : 'All time'}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm">
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Items Sold</p>
+          <p className="text-xl font-black text-purple-700 mt-1">
+            {sales.reduce((s, x) => s + x.items.reduce((a, i) => a + (i.quantity || 1), 0), 0)}
+          </p>
+          <p className="text-[11px] text-slate-400 mt-1 font-medium">outfits</p>
+        </div>
+      </div>
+
       {/* Search & Filters */}
       <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
         <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-3">
@@ -325,68 +498,100 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      {/* Invoices List (Mobile Cards + Desktop Table) */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Invoices — Grouped by Date */}
+      <div className="space-y-4">
         {loading ? (
-          <div className="p-12 text-center">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">
             <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <p className="text-xs sm:text-sm font-semibold text-slate-500">Loading invoices...</p>
           </div>
-        ) : sales.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
+        ) : groupedSales.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center text-slate-400">
             <ShoppingBag className="w-12 h-12 mx-auto text-slate-300 mb-2" />
             <p className="text-sm font-bold text-slate-700">No invoices found</p>
           </div>
         ) : (
-          <>
-            {/* Desktop Table View */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-50 text-slate-600 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
-                  <tr>
-                    <th className="py-3.5 px-4">Invoice #</th>
-                    <th className="py-3.5 px-4">Date & Time</th>
-                    <th className="py-3.5 px-4">Customer Details</th>
-                    <th className="py-3.5 px-3">Outfits</th>
-                    <th className="py-3.5 px-3">Payment</th>
-                    <th className="py-3.5 px-4">Grand Total</th>
-                    <th className="py-3.5 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 font-medium">
-                  {sales.map((sale) => (
-                    <tr key={sale._id} className="hover:bg-slate-50/70 transition">
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-900">
-                        {sale.invoiceNumber}
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-500 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                          <span>{new Date(sale.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400">
-                          {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <p className="font-bold text-slate-800">{sale.customer?.name || 'Walk-in'}</p>
-                        <p className="text-[11px] text-slate-400">{sale.customer?.phone || '-'}</p>
-                      </td>
-                      <td className="py-3.5 px-3 text-slate-600">
-                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-bold">
-                          {sale.items?.length || 1} items
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-3">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">
-                          {sale.paymentMode}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 font-black text-slate-900 text-sm">
-                        ₹{sale.grandTotal?.toLocaleString('en-IN')}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+          groupedSales.map((group) => (
+            <div key={group.dateKey} className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              {/* Date Group Header */}
+              <div className={`flex items-center justify-between px-4 py-3 border-b border-slate-100 ${
+                group.label === 'Today'
+                  ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white'
+                  : 'bg-slate-50 text-slate-700'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <Calendar className={`w-4 h-4 ${group.label === 'Today' ? 'text-rose-200' : 'text-slate-400'}`} />
+                  <span className="font-black text-sm">
+                    {group.label === 'Today' ? '📅 Today' : group.label}
+                  </span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                    group.label === 'Today'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-200 text-slate-600'
+                  }`}>
+                    {group.count} {group.count === 1 ? 'bill' : 'bills'}
+                  </span>
+                </div>
+                <div className={`text-sm font-black ${
+                  group.label === 'Today' ? 'text-white' : 'text-slate-900'
+                }`}>
+                  ₹{group.total.toLocaleString('en-IN')}
+                </div>
+              </div>
+
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs sm:text-sm">
+                  <thead className="text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th className="py-2.5 px-4">Invoice #</th>
+                      <th className="py-2.5 px-4">Time</th>
+                      <th className="py-2.5 px-4">Customer</th>
+                      <th className="py-2.5 px-3">Outfits</th>
+                      <th className="py-2.5 px-3">Payment</th>
+                      <th className="py-2.5 px-3">By</th>
+                      <th className="py-2.5 px-4">Amount</th>
+                      <th className="py-2.5 px-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {group.sales.map((sale) => (
+                      <tr key={sale._id} className="hover:bg-slate-50/70 transition">
+                        <td className="py-3 px-4 font-mono font-bold text-slate-900 text-xs">
+                          {sale.invoiceNumber}
+                        </td>
+                        <td className="py-3 px-4 text-slate-500 text-xs">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            <span>{new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="font-bold text-slate-800 text-xs">{sale.customer?.name || 'Walk-in'}</p>
+                          <p className="text-[10px] text-slate-400">{sale.customer?.phone || '-'}</p>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-bold">
+                            {sale.items?.length || 1} items
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-800">
+                            {sale.paymentMode}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="flex items-center gap-1">
+                            <User className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span className="text-[11px] font-bold text-slate-700 max-w-[70px] truncate">
+                              {sale.createdBy?.displayName || 'Admin'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 font-black text-slate-900 text-sm">
+                          ₹{sale.grandTotal?.toLocaleString('en-IN')}
+                        </td>
+                        <td className="py-3 px-4 text-right">
                           <button
                             onClick={() => openInvoiceModal(sale)}
                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-bold transition"
@@ -394,58 +599,54 @@ export default function InvoicesPage() {
                             <Eye className="w-3.5 h-3.5" />
                             <span>View / Print</span>
                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="md:hidden divide-y divide-slate-100">
+                {group.sales.map((sale) => (
+                  <div key={sale._id} className="p-4 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-black text-slate-900 text-sm">{sale.invoiceNumber}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                        {sale.paymentMode}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-600">
+                      <div>
+                        <p className="font-bold text-slate-900">{sale.customer?.name || 'Walk-in'}</p>
+                        <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {new Date(sale.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-rose-600 text-base">₹{sale.grandTotal?.toLocaleString('en-IN')}</p>
+                        <div className="flex items-center gap-1 justify-end mt-0.5">
+                          <User className="w-3 h-3 text-slate-400" />
+                          <span className="text-[10px] text-slate-500 font-semibold">{sale.createdBy?.displayName || 'Admin'}</span>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards View */}
-            <div className="md:hidden divide-y divide-slate-100">
-              {sales.map((sale) => (
-                <div key={sale._id} className="p-4 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-black text-slate-900 text-sm">
-                      {sale.invoiceNumber}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                      {sale.paymentMode}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-slate-600">
-                    <div>
-                      <p className="font-bold text-slate-900">{sale.customer?.name || 'Walk-in'}</p>
-                      <p className="text-[11px] text-slate-400">{sale.customer?.phone || '-'}</p>
+                        <p className="text-[10px] text-slate-400">{sale.items?.length || 1} outfits</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-black text-rose-600 text-base">
-                        ₹{sale.grandTotal?.toLocaleString('en-IN')}
-                      </p>
-                      <p className="text-[10px] text-slate-400">
-                        {new Date(sale.createdAt).toLocaleDateString()}
-                      </p>
+                    <div className="pt-2 border-t border-slate-100">
+                      <button
+                        onClick={() => openInvoiceModal(sale)}
+                        className="w-full px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 text-xs font-bold flex items-center justify-center gap-1"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>View / Print Bill</span>
+                      </button>
                     </div>
                   </div>
-
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-[11px] text-slate-500 font-medium">
-                      {sale.items?.length || 1} outfits billed
-                    </span>
-                    <button
-                      onClick={() => openInvoiceModal(sale)}
-                      className="px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 text-xs font-bold flex items-center gap-1"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      <span>Print Bill</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </>
+          ))
         )}
       </div>
 
@@ -619,16 +820,15 @@ export default function InvoicesPage() {
                 </button>
 
                 {/* 2. Send WhatsApp Link */}
-                <a
-                  href={getWhatsAppShareUrl(selectedInvoice)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 text-center"
-                  title="Open WhatsApp chat with bill summary and digital e-bill link"
+                <button
+                  type="button"
+                  onClick={() => handleShareWhatsAppLink(selectedInvoice)}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 text-center cursor-pointer"
+                  title="Send digital e-bill link & itemized receipt directly to customer's WhatsApp"
                 >
                   <Send className="w-4 h-4" />
                   <span>WhatsApp Link</span>
-                </a>
+                </button>
 
                 {/* 3. Send WhatsApp Image */}
                 <button

@@ -74,6 +74,8 @@ export async function GET() {
 
     // Products & Inventory Stats
     const products = await Product.find({ isActive: true });
+    // Build cost price lookup map for profit calculations
+    const productCostMap = {};
     let totalStockUnits = 0;
     let inventoryCostValue = 0;
     let inventoryRetailValue = 0;
@@ -81,6 +83,7 @@ export async function GET() {
 
     for (const p of products) {
       const stock = p.currentStock || 0;
+      productCostMap[String(p._id)] = p.costPrice || 0;
       totalStockUnits += stock;
       inventoryCostValue += (p.costPrice || 0) * stock;
       inventoryRetailValue += (p.sellingPrice || 0) * stock;
@@ -99,6 +102,21 @@ export async function GET() {
         });
       }
     }
+
+    // Profit calculations
+    const calcProfit = (sales) =>
+      sales.reduce((total, s) =>
+        total + s.items.reduce((sum, item) => {
+          const cost = productCostMap[String(item.product)] ?? 0;
+          const profitPerUnit = (item.rate || 0) - cost;
+          return sum + profitPerUnit * (item.quantity || 1);
+        }, 0),
+        0
+      );
+
+    const todayProfit  = calcProfit(todaySales);
+    const monthProfit  = calcProfit(monthSales);
+    const inventoryPotentialProfit = Math.round(inventoryRetailValue - inventoryCostValue);
 
     // Last 7 days trend for chart
     const last7Days = [];
@@ -129,12 +147,15 @@ export async function GET() {
         todayRevenue,
         todayOrders: todaySales.length,
         todayUnits,
+        todayProfit: Math.round(todayProfit),
         weekRevenue,
         weekOrders: weekSales.length,
         weekUnits,
         monthRevenue,
         monthOrders: monthSales.length,
         monthUnits,
+        monthProfit: Math.round(monthProfit),
+        inventoryPotentialProfit,
         womenRevenue: Math.round(womenRevenue),
         kidsRevenue: Math.round(kidsRevenue),
         totalProducts: products.length,

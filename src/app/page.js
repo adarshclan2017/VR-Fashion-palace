@@ -115,9 +115,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* 4 Primary KPI Summary Cards (Responsive: 1 col on mobile, 2 col on tablet, 4 col desktop) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-5">
-        {/* Today's Sales */}
+      {/* KPI Cards — 2 on top row, 3 on second row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
+        {/* Today's Revenue */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-rose-100 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Today&apos;s Revenue</span>
@@ -134,7 +134,26 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* This Week's Sales */}
+        {/* Today's Profit */}
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-5 border border-emerald-200 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Today&apos;s Profit</span>
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+              <DollarSign className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-heading">
+            ₹{stats.todayProfit != null ? stats.todayProfit.toLocaleString('en-IN') : '0'}
+          </div>
+          <div className="text-xs text-emerald-600 mt-2 font-semibold">
+            Net profit after cost deduction
+          </div>
+        </div>
+      </div>
+
+      {/* Second row — 3 cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5">
+        {/* This Week */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">This Week Sales</span>
@@ -151,24 +170,23 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* This Month's Sales */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-emerald-100 shadow-sm hover:shadow-md transition">
+        {/* Monthly Profit */}
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">This Month Sales</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-              <BarChart3 className="w-4 h-4" />
+            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Month Profit</span>
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
+              <Sparkles className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 font-heading">
-            ₹{stats.monthRevenue ? stats.monthRevenue.toLocaleString('en-IN') : '0'}
+          <div className="text-2xl sm:text-3xl font-black text-amber-700 font-heading">
+            ₹{stats.monthProfit != null ? stats.monthProfit.toLocaleString('en-IN') : '0'}
           </div>
-          <div className="flex items-center justify-between text-xs text-slate-500 mt-2 font-medium">
-            <span>{stats.monthOrders || 0} bills</span>
-            <span className="text-emerald-600 font-bold">{stats.monthUnits || 0} pieces sold</span>
+          <div className="text-xs text-amber-600 mt-2 font-semibold">
+            {stats.monthOrders || 0} bills · {stats.monthUnits || 0} pieces sold
           </div>
         </div>
 
-        {/* Stock & Inventory Value */}
+        {/* Stock Value */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Shop Stock Value</span>

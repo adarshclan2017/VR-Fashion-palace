@@ -48,6 +48,11 @@ const SaleSchema = new mongoose.Schema(
       default: 'Paid',
     },
     notes: { type: String, default: '' },
+    createdBy: {
+      userId:      { type: String, default: '' },
+      username:    { type: String, default: '' },
+      displayName: { type: String, default: 'Unknown' },
+    },
   },
   { timestamps: true }
 );
