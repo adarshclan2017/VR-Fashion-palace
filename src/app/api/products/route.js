@@ -51,23 +51,34 @@ export async function POST(request) {
     await connectDB();
     const body = await request.json();
 
-    if (!body.name || !body.code) {
-      return NextResponse.json({ success: false, error: 'Product name and code are required' }, { status: 400 });
+    if (!body.name || !body.name.trim()) {
+      return NextResponse.json({ success: false, error: 'Product name is required' }, { status: 400 });
+    }
+
+    let code = (body.code || '').toUpperCase().trim();
+    if (!code) {
+      const secPrefix = ((body.section || 'VR').replace(/[^a-zA-Z]/g, '').slice(0, 3) || 'VR').toUpperCase();
+      code = `${secPrefix}-${Date.now().toString().slice(-6)}`;
     }
 
     // Check if code already exists
-    const existing = await Product.findOne({ code: body.code.toUpperCase() });
+    const existing = await Product.findOne({ code });
     if (existing) {
-      return NextResponse.json({ success: false, error: 'Outfit code already exists' }, { status: 400 });
+      if (body.code && body.code.trim()) {
+        return NextResponse.json({ success: false, error: `Outfit code '${code}' already exists` }, { status: 400 });
+      }
+      code = `${code}-${Math.floor(100 + Math.random() * 900)}`;
     }
 
     const currentStock = Number(body.currentStock) || Number(body.initialStock) || 0;
+    const section = (body.section || 'Women').trim();
+    const category = (body.category || 'General').trim() || 'General';
 
     const product = new Product({
       name: body.name.trim(),
-      code: body.code.toUpperCase().trim(),
-      section: body.section || 'Women',
-      category: body.category || 'Kurtis & Suits',
+      code,
+      section,
+      category,
       size: body.size || 'Free Size',
       color: body.color || 'Standard',
       fabric: body.fabric || 'Cotton',
@@ -76,7 +87,7 @@ export async function POST(request) {
       mrp: Number(body.mrp) || Number(body.sellingPrice) || 0,
       costPrice: Number(body.costPrice) || 0,
       sellingPrice: Number(body.sellingPrice) || 0,
-      gstRate: Number(body.gstRate) || 5,
+      gstRate: Number(body.gstRate) || 0,
       hsnCode: body.hsnCode || '6204',
       minStockAlert: Number(body.minStockAlert) || 5,
       barcode: body.barcode || '',

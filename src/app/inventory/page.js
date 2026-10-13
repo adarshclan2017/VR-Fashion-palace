@@ -102,11 +102,17 @@ export default function InventoryPage() {
 
   const handleAddSection = () => {
     const name = newSectionText.trim();
-    if (!name || sections.includes(name)) { setAddingSection(false); setNewSectionText(''); return; }
-    const updated = [...sections, name];
+    if (!name) { setAddingSection(false); setNewSectionText(''); return; }
+    const updated = sections.includes(name) ? sections : [...sections, name];
     setSections(updated);
     saveLS(LS_SECTIONS, updated);
-    setFormData((prev) => ({ ...prev, section: name, category: '' }));
+    const existingCats = categoriesMap[name] || [];
+    setFormData((prev) => ({
+      ...prev,
+      section: name,
+      category: existingCats[0] || '',
+      size: getSizesForSection(name)[0] || 'Free Size'
+    }));
     setAddingSection(false);
     setNewSectionText('');
   };
@@ -114,13 +120,13 @@ export default function InventoryPage() {
   const handleAddCategory = () => {
     const name = newCategoryText.trim();
     if (!name) { setAddingCategory(false); setNewCategoryText(''); return; }
-    const sec = formData.section;
+    const sec = formData.section || sections[0] || 'Women';
     const existing = categoriesMap[sec] || [];
-    if (existing.includes(name)) { setAddingCategory(false); setNewCategoryText(''); return; }
-    const updated = { ...categoriesMap, [sec]: [...existing, name] };
-    setCategoriesMap(updated);
-    saveLS(LS_CATEGORIES, updated);
-    setFormData((prev) => ({ ...prev, category: name }));
+    const updatedCats = existing.includes(name) ? existing : [...existing, name];
+    const updatedMap = { ...categoriesMap, [sec]: updatedCats };
+    setCategoriesMap(updatedMap);
+    saveLS(LS_CATEGORIES, updatedMap);
+    setFormData((prev) => ({ ...prev, section: sec, category: name }));
     setAddingCategory(false);
     setNewCategoryText('');
   };
@@ -225,18 +231,52 @@ export default function InventoryPage() {
   // Handle Save / Add Product
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       setErrorMsg('Outfit name is required');
       return;
     }
 
+    if (!formData.sellingPrice || Number(formData.sellingPrice) <= 0) {
+      setErrorMsg('Please enter a valid selling price');
+      return;
+    }
+
+    const sec = formData.section?.trim() || (sections[0] || 'Women');
+    const cat = formData.category?.trim() || (categoriesMap[sec] && categoriesMap[sec][0]) || 'General';
+
+    // Auto-save section to localStorage if not yet recorded
+    if (!sections.includes(sec)) {
+      const updatedSecs = [...sections, sec];
+      setSections(updatedSecs);
+      saveLS(LS_SECTIONS, updatedSecs);
+    }
+
+    // Auto-save category to localStorage if not yet recorded
+    if (cat && cat !== 'General') {
+      const existingCats = categoriesMap[sec] || [];
+      if (!existingCats.includes(cat)) {
+        const updatedCats = { ...categoriesMap, [sec]: [...existingCats, cat] };
+        setCategoriesMap(updatedCats);
+        saveLS(LS_CATEGORIES, updatedCats);
+      }
+    }
+
     // Auto-generate SKU if not set
-    const sectionPrefix = {
-      'Women': 'WMN', 'Kids Girls': 'KGR', 'Kids Boys': 'KBY',
-      'Infants': 'INF', 'Ethnic Material': 'ETH',
+    const sectionPrefix = (sec.replace(/[^a-zA-Z]/g, '').slice(0, 3) || 'VR').toUpperCase();
+    const code = (formData.code?.trim() || `${sectionPrefix}-${Date.now().toString().slice(-6)}`).toUpperCase();
+
+    const payload = {
+      ...formData,
+      name: formData.name.trim(),
+      code,
+      section: sec,
+      category: cat,
+      mrp: Number(formData.mrp) || Number(formData.sellingPrice) || 0,
+      costPrice: Number(formData.costPrice) || 0,
+      sellingPrice: Number(formData.sellingPrice) || 0,
+      currentStock: Number(formData.currentStock) || 0,
+      minStockAlert: Number(formData.minStockAlert) || 5,
     };
-    const code = formData.code || `${sectionPrefix[formData.section] || 'VR'}-${Date.now().toString().slice(-4)}`;
-    const payload = { ...formData, code };
 
     setSaving(true);
     setErrorMsg('');
@@ -260,7 +300,7 @@ export default function InventoryPage() {
         fetchProducts();
         setTimeout(() => setSuccessMsg(''), 3000);
       } else {
-        setErrorMsg(data.error || 'Failed to save product');
+        setErrorMsg(data.error || 'Failed to save outfit');
       }
     } catch (err) {
       setErrorMsg('Error: ' + err.message);
@@ -276,7 +316,7 @@ export default function InventoryPage() {
       name: p.name,
       code: p.code,
       section: p.section || 'Women',
-      category: p.category || 'Kurtis & Suits',
+      category: p.category || 'General',
       size: p.size || 'Free Size',
       color: p.color || '',
       fabric: p.fabric || 'Cotton',
@@ -288,6 +328,12 @@ export default function InventoryPage() {
       minStockAlert: p.minStockAlert || 5,
       barcode: p.barcode || '',
     });
+    if (p.section && !sections.includes(p.section)) {
+      const updated = [...sections, p.section];
+      setSections(updated);
+      saveLS(LS_SECTIONS, updated);
+    }
+    setErrorMsg('');
     setShowAddModal(true);
   };
 
@@ -335,13 +381,15 @@ export default function InventoryPage() {
 
         <button
           onClick={() => {
+            const defaultSec = sections[0] || 'Women';
+            const defaultCat = (categoriesMap[defaultSec] && categoriesMap[defaultSec][0]) || '';
             setEditingProduct(null);
             setFormData({
               name: '',
               code: '',
-              section: 'Women',
-              category: 'Sarees',
-              size: 'M',
+              section: defaultSec,
+              category: defaultCat,
+              size: getSizesForSection(defaultSec)[0] || 'Free Size',
               color: 'White',
               fabric: 'Cotton',
               brand: 'VR Collection',
@@ -352,6 +400,7 @@ export default function InventoryPage() {
               minStockAlert: '5',
               barcode: '',
             });
+            setErrorMsg('');
             setShowAddModal(true);
           }}
           className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/25 transition active:scale-95"
@@ -398,9 +447,9 @@ export default function InventoryPage() {
           </button>
         </div>
 
-        {/* Section Filter Pills - built from user's dynamic sections */}
+        {/* Section Filter Pills - built from user's dynamic sections + catalog */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {['All', ...sections].map((sec) => (
+          {['All', ...Array.from(new Set([...sections, ...products.map((p) => p.section).filter(Boolean)]))].map((sec) => (
             <button
               key={sec}
               onClick={() => setSelectedSection(sec)}
@@ -744,7 +793,9 @@ export default function InventoryPage() {
                         }}
                         className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-1 focus:ring-rose-500"
                       >
-                        {sections.map((s) => <option key={s} value={s}>{s}</option>)}
+                        {Array.from(new Set([...sections, ...(formData.section ? [formData.section] : [])])).map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
                       </select>
                       <button type="button" onClick={() => { setAddingSection(true); setNewSectionText(''); }}
                         className="px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold hover:bg-rose-100 transition shrink-0"
@@ -779,12 +830,15 @@ export default function InventoryPage() {
 
                 {/* CATEGORY */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Category</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[11px] font-bold text-slate-700 uppercase">Category</label>
+                    <span className="text-[10px] text-slate-400">(Optional)</span>
+                  </div>
 
-                  {(categoriesMap[formData.section] || []).length === 0 && !addingCategory ? (
+                  {(categoriesMap[formData.section] || []).length === 0 && !formData.category && !addingCategory ? (
                     <div className="p-3 rounded-xl border-2 border-dashed border-slate-300 text-center">
                       <p className="text-xs text-slate-400 mb-2">
-                        {formData.section ? `No categories in "${formData.section}" yet.` : 'Select a section first.'}
+                        {formData.section ? `No categories in "${formData.section}" yet (optional).` : 'Select a collection first.'}
                       </p>
                       {formData.section && (
                         <button type="button" onClick={() => setAddingCategory(true)}
@@ -800,7 +854,8 @@ export default function InventoryPage() {
                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                         className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-1 focus:ring-rose-500"
                       >
-                        {(categoriesMap[formData.section] || []).map((cat) => (
+                        <option value="">General (No category)</option>
+                        {Array.from(new Set([...(categoriesMap[formData.section] || []), ...(formData.category ? [formData.category] : [])])).map((cat) => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
                       </select>

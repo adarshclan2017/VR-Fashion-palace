@@ -15,13 +15,14 @@ const ProductSchema = new mongoose.Schema(
     code: { type: String, required: true, unique: true, uppercase: true, trim: true },
     section: {
       type: String,
-      enum: ['Women', 'Kids Girls', 'Kids Boys', 'Infants', 'Ethnic Material', 'Accessories'],
+      required: true,
       default: 'Women',
+      trim: true,
     },
     category: {
       type: String,
-      required: true,
-      default: 'Kurtis & Suits',
+      default: 'General',
+      trim: true,
     },
     size: {
       type: String,
@@ -30,9 +31,9 @@ const ProductSchema = new mongoose.Schema(
     color: { type: String, default: 'Multicolor' },
     fabric: { type: String, default: 'Cotton' },
     brand: { type: String, default: 'Boutique Collection' },
-    unit: { type: String, enum: ['piece', 'set', 'meter'], default: 'piece' },
+    unit: { type: String, default: 'piece' },
     mrp: { type: Number, default: 0 },
-    costPrice: { type: Number, required: true, default: 0 },
+    costPrice: { type: Number, default: 0 },
     sellingPrice: { type: Number, required: true, default: 0 },
     gstRate: { type: Number, default: 0 },
     hsnCode: { type: String, default: '6204' }, // 6204 women suits/dresses, 6209 babies garments

@@ -99,8 +99,20 @@ export default function BillingPage() {
     fetchProducts();
   }, []);
 
-  // Filter sections
-  const sections = ['All', 'Women', 'Kids Girls', 'Kids Boys', 'Infants'];
+  // Dynamic sections derived from products + user-saved sections
+  const sections = useMemo(() => {
+    const list = new Set();
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = JSON.parse(localStorage.getItem('vr_palace_sections'));
+        if (Array.isArray(saved)) saved.forEach((s) => list.add(s));
+      } catch {}
+    }
+    products.forEach((p) => {
+      if (p.section) list.add(p.section);
+    });
+    return ['All', ...Array.from(list)];
+  }, [products]);
 
   // Categories list derived from products
   const categories = useMemo(() => {
@@ -639,11 +651,17 @@ export default function BillingPage() {
                         : 'bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-700'
                     }`}
                   >
-                    {sec === 'All' && '🌟 All Collections'}
-                    {sec === 'Women' && '👗 Women Wear'}
-                    {sec === 'Kids Girls' && '🎀 Kids Girls'}
-                    {sec === 'Kids Boys' && '👦 Kids Boys'}
-                    {sec === 'Infants' && '👶 Infant & Baby'}
+                    {sec === 'All'
+                      ? '🌟 All Collections'
+                      : sec === 'Women'
+                      ? '👗 Women Wear'
+                      : sec === 'Kids Girls'
+                      ? '🎀 Kids Girls'
+                      : sec === 'Kids Boys'
+                      ? '👦 Kids Boys'
+                      : sec === 'Infants'
+                      ? '👶 Infant & Baby'
+                      : sec}
                   </button>
                 ))}
               </div>
