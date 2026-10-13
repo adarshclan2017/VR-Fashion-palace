@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import {
-  Crown,
   Receipt,
   TrendingUp,
   AlertTriangle,
@@ -75,31 +74,30 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
       {/* Top Boutique Banner & Fast Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-950 via-purple-950 to-rose-950 rounded-3xl p-5 sm:p-7 text-white shadow-2xl relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute -right-12 -top-12 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-3 py-0.5 rounded-full text-xs font-black bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1.5">
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
-              <span>VR FASHION PALACE</span>
-            </span>
-            <span className="text-xs text-rose-200/70 hidden sm:inline">&bull; Women & Kids Wear Boutique</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl p-4 sm:p-5 border border-rose-100 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
+            <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-lg" />
           </div>
-
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight font-heading">
-            Store Performance & Billing Hub
-          </h1>
-          <p className="text-rose-100/80 text-xs sm:text-sm mt-1 max-w-xl">
-            Live overview of Women & Kids fashion sales, counter billing, stock levels, and revenue trends.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                Store Overview
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                VR Fashion Palace
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Sales analytics, counter billing, stock levels & performance
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 relative z-10">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Link
             href="/billing"
-            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-black text-xs sm:text-sm shadow-xl shadow-rose-600/30 transition active:scale-95"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/25 transition active:scale-95"
           >
             <Receipt className="w-4 h-4" />
             <span>Generate New Bill</span>
@@ -107,7 +105,7 @@ export default function Dashboard() {
 
           <Link
             href="/inventory"
-            className="flex items-center gap-2 px-3.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm backdrop-blur border border-white/10 transition"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition"
           >
             <Layers className="w-4 h-4" />
             <span>Stock & Apparel</span>

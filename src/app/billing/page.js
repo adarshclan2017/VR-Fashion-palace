@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import {
-  Crown,
   Search,
   Plus,
   Minus,
@@ -552,36 +551,30 @@ export default function BillingPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      {/* Top Banner / Store Header */}
-      <div className="bg-gradient-to-r from-purple-950 via-rose-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1">
-              <Crown className="w-3 h-3 text-amber-400" />
-              <span>VR FASHION PALACE POS</span>
-            </span>
-            <span className="text-xs text-rose-200/70 hidden sm:inline">&bull; Women & Kids Wear Boutique</span>
+      {/* Clean Top Header */}
+      <div className="flex items-center justify-between pb-2 border-b border-slate-200/70">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-sm bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
+            <img src="/logo.png" alt="VR Logo" className="w-full h-full object-contain rounded-lg" />
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight font-heading">
-            Fast Counter Billing & Invoicing
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-300 mt-0.5">
-            Select items from Women or Kids wear, enter customer phone for WhatsApp receipt, and collect payments.
-          </p>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 font-heading tracking-tight">
+              POS Billing Counter
+            </h1>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div className="bg-white/10 backdrop-blur-md px-3 sm:px-4 py-2 rounded-xl border border-white/10 text-right">
-            <p className="text-[10px] text-slate-300 uppercase font-semibold">Active Catalog</p>
-            <p className="text-sm sm:text-base font-black text-rose-300">{products.length} Outfits</p>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+            {products.length} Items
+          </span>
           <button
             onClick={fetchProducts}
             disabled={loadingProducts}
-            className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition disabled:opacity-50"
+            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition"
             title="Refresh Products"
           >
-            <RefreshCw className={`w-4 h-4 ${loadingProducts ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingProducts ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
@@ -691,22 +684,23 @@ export default function BillingPage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-4">
               {filteredProducts.map((p) => {
                 const discountPct = p.mrp > p.sellingPrice ? Math.round(((p.mrp - p.sellingPrice) / p.mrp) * 100) : 0;
                 const isKids = p.section?.includes('Kids') || p.section === 'Infants';
                 const isOutOfStock = p.currentStock <= 0;
+                const inCart = billItems.find((item) => (item.product || item._id) === p._id);
 
                 return (
                   <div
                     key={p._id}
-                    className="bg-white rounded-2xl border border-slate-200/80 hover:border-rose-300 p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
+                    className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 hover:border-rose-300 p-2.5 sm:p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group relative overflow-hidden"
                   >
                     {/* Top Tag & Stock */}
                     <div>
-                      <div className="flex items-center justify-between gap-1 mb-2">
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
                         <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                          className={`px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase tracking-wider truncate max-w-[90px] sm:max-w-none ${
                             p.section === 'Women'
                               ? 'bg-rose-100 text-rose-800'
                               : isKids
@@ -718,7 +712,7 @@ export default function BillingPage() {
                         </span>
 
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          className={`text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
                             isOutOfStock
                               ? 'bg-red-100 text-red-700'
                               : p.currentStock <= (p.minStockAlert || 5)
@@ -726,60 +720,68 @@ export default function BillingPage() {
                               : 'bg-emerald-100 text-emerald-800'
                           }`}
                         >
-                          {isOutOfStock ? 'Sold Out' : `${p.currentStock} in stock`}
+                          {isOutOfStock ? 'Sold Out' : `${p.currentStock}`}
                         </span>
                       </div>
 
                       {/* Product Name */}
-                      <h3 className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 group-hover:text-rose-600 transition">
+                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2 group-hover:text-rose-600 transition">
                         {p.name}
                       </h3>
 
-                      {/* Meta badges: Size & Color & Fabric */}
-                      <div className="flex flex-wrap items-center gap-1.5 mt-2 text-[11px] text-slate-600 font-medium">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-bold">
-                          Size: {p.size || 'Free'}
+                      {/* Meta badges: Size & Color */}
+                      <div className="flex flex-wrap items-center gap-1 mt-1.5 text-[10px] sm:text-[11px] text-slate-600 font-medium">
+                        <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 font-bold">
+                          {p.size || 'Free Size'}
                         </span>
                         {p.color && (
-                          <span className="px-2 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/60">
+                          <span className="px-1.5 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/60 truncate max-w-[65px] sm:max-w-none">
                             {p.color}
-                          </span>
-                        )}
-                        {p.fabric && (
-                          <span className="px-2 py-0.5 rounded bg-slate-50 text-slate-600 border border-slate-200/60">
-                            {p.fabric}
                           </span>
                         )}
                       </div>
                     </div>
 
                     {/* Bottom Pricing & Add to Bill Button */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
                       <div>
-                        <div className="flex items-baseline gap-1.5">
-                          <span className="text-base sm:text-lg font-black text-slate-900">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-sm sm:text-base font-black text-slate-900">
                             ₹{p.sellingPrice.toLocaleString('en-IN')}
                           </span>
                           {p.mrp > p.sellingPrice && (
-                            <span className="text-xs text-slate-400 line-through">
+                            <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                               ₹{p.mrp.toLocaleString('en-IN')}
                             </span>
                           )}
                         </div>
                         {discountPct > 0 && (
-                          <p className="text-[10px] font-bold text-emerald-600">
-                            Save {discountPct}% OFF
-                          </p>
+                          <span className="text-[9px] sm:text-[10px] font-bold text-emerald-600 block">
+                            {discountPct}% OFF
+                          </span>
                         )}
                       </div>
 
                       <button
                         onClick={() => addToCart(p)}
                         disabled={isOutOfStock}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-sm shadow-rose-600/20 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                        className={`w-full sm:w-auto flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-lg sm:rounded-xl font-bold text-xs shadow-sm active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed ${
+                          inCart
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : 'bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white'
+                        }`}
                       >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Add</span>
+                        {inCart ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>{inCart.quantity} in cart</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1152,6 +1154,11 @@ export default function BillingPage() {
             >
               {/* Store Branding Header */}
               <div className="text-center pb-4 border-b border-dashed border-slate-300">
+                <img
+                  src="/logo.png"
+                  alt="VR Logo"
+                  className="w-12 h-12 object-contain mx-auto mb-2"
+                />
                 <h2 className="font-heading font-black text-xl tracking-tight text-slate-950 uppercase">
                   VR FASHION PALACE
                 </h2>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import {
-  Crown,
   CheckCircle2,
   Printer,
   ShoppingBag,
@@ -118,8 +117,8 @@ export default function PublicBillPage() {
         >
           {/* Header Banner */}
           <div className="bg-gradient-to-r from-purple-950 via-rose-950 to-slate-900 text-white p-6 text-center relative">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-900 to-rose-600 flex items-center justify-center text-amber-300 shadow-md mx-auto mb-2 border border-rose-400/20">
-              <Crown className="w-6 h-6" />
+            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg mx-auto mb-2.5 border border-amber-400/40 bg-black p-1 flex items-center justify-center">
+              <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-xl" />
             </div>
             <h1 className="font-heading text-xl sm:text-2xl font-black tracking-tight uppercase">
               VR FASHION PALACE

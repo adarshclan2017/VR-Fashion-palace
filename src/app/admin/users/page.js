@@ -193,22 +193,22 @@ export default function AdminUsersPage() {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-rose-100 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-900 to-rose-600 text-amber-300 flex items-center justify-center font-bold shadow-md shadow-rose-500/20">
-            <Users className="w-6 h-6" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
+            <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-lg" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800">
-                VR FASHION PALACE
+            <div className="flex items-center gap-2 mb-0.5">
+              <h1 className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                Staff & User Management
+              </h1>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                VR Fashion Palace
               </span>
             </div>
-            <h1 className="font-heading text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Staff & Cashier Access Management
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-500">
-              Manage Admin accounts (full overview access) and Employee accounts (counter billing & POS invoices)
+            <p className="text-xs text-slate-500 font-medium">
+              Manage Admin accounts and Staff Cashier counter billing accounts
             </p>
           </div>
         </div>

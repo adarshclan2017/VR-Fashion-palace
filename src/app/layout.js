@@ -5,6 +5,11 @@ import Navbar from '@/components/Navbar';
 export const metadata = {
   title: 'VR Fashion Palace - Women & Kids Wear Boutique Billing & ERP',
   description: 'Fast POS billing, apparel inventory management, and weekly/monthly sales reports for Women & Kids wear boutique.',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 export default function RootLayout({ children }) {

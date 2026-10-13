@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { Crown, Scissors, LogIn, Eye, EyeOff, Shield, User, Loader2, AlertCircle } from 'lucide-react';
+import { Scissors, LogIn, Eye, EyeOff, Shield, User, Loader2, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -90,8 +90,8 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Logo & Branding */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-900 to-rose-600 flex items-center justify-center text-amber-300 shadow-2xl shadow-rose-600/30 mx-auto mb-4 border border-rose-400/20">
-            <Crown className="w-8 h-8" />
+          <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-black/60 mx-auto mb-4 border border-amber-400/40 bg-black p-1 flex items-center justify-center">
+            <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-xl" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight font-heading">VR FASHION PALACE</h1>
           <p className="text-rose-200/80 text-xs sm:text-sm font-semibold mt-1">Women & Kids Wear Boutique</p>

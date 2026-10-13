@@ -9,7 +9,6 @@ import {
   Calendar,
   RefreshCw,
   Send,
-  Crown,
   Eye,
   CheckCircle2,
   Clock,
@@ -341,21 +340,24 @@ export default function InvoicesPage() {
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-2xl border border-rose-100 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
-              <Crown className="w-3 h-3 text-amber-500" />
-              <span>VR FASHION PALACE</span>
-            </span>
-            <span className="text-xs text-slate-400">&bull; Invoice Records</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
+            <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-lg" />
           </div>
-          <h1 className="font-heading text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Customer Invoices & Billing History
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Search past customer sales, reprint thermal bills, or share digital receipts on WhatsApp.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <h1 className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                Customer Invoices
+              </h1>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
+                VR Fashion Palace
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              Past bills history, reprint invoices & digital receipts
+            </p>
+          </div>
         </div>
 
         <button
@@ -684,6 +686,11 @@ export default function InvoicesPage() {
               }`}
             >
               <div className="text-center pb-4 border-b border-dashed border-slate-300">
+                <img
+                  src="/logo.png"
+                  alt="VR Logo"
+                  className="w-12 h-12 object-contain mx-auto mb-2"
+                />
                 <h2 className="font-heading font-black text-xl tracking-tight uppercase">
                   VR FASHION PALACE
                 </h2>
