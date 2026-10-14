@@ -78,6 +78,18 @@ export default function BillingPage() {
   // Mobile drawer state
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
+  // Prevent background scroll when mobile cart is open
+  useEffect(() => {
+    if (mobileCartOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileCartOpen]);
+
   // Fetch available products
   const fetchProducts = async () => {
     try {
@@ -287,7 +299,7 @@ export default function BillingPage() {
         grandTotal: billSummary.grandTotal,
         paymentMode,
         paymentStatus: 'Paid',
-        notes: notes.trim() || 'Thank you for shopping at VR Fashion Palace!',
+        notes: notes.trim() || 'Thank you for shopping at V.R. Fashion Palace!',
       };
 
       const res = await fetch('/api/sales', {
@@ -343,7 +355,7 @@ export default function BillingPage() {
 
   // Helper to build a complete WhatsApp message with boutique branding, items list, and bill link
   const buildWhatsAppMessage = (sale, billUrl) => {
-    const shopName = 'VR FASHION PALACE';
+    const shopName = 'V.R. FASHION PALACE';
     const customerName = sale.customer?.name || 'Valued Customer';
     const inv = sale.invoiceNumber;
     const total = Number(sale.grandTotal || 0).toLocaleString('en-IN');
@@ -358,7 +370,9 @@ export default function BillingPage() {
 
     return (
       `👗 *${shopName}* 🛍️\n` +
-      `_Women & Kids Wear Boutique_\n\n` +
+      `_Women & Kids Wear_\n` +
+      `📍 Near check post, Kozhivilai, Kaliyakkavilai (P.O), Pin: 629153\n` +
+      `📞 Phone: 8903940644\n\n` +
       `🙏 *Thank you for shopping with us!*\n\n` +
       `🧾 *Bill No:* ${inv}\n` +
       `📅 *Date:* ${date}\n` +
@@ -975,7 +989,7 @@ export default function BillingPage() {
       </div>
 
       {/* Mobile Floating Cart Trigger Bar (Sticky Bottom on Phones) */}
-      <div className="lg:hidden fixed bottom-14 left-3 right-3 z-30">
+      <div className="lg:hidden fixed bottom-4 left-3 right-3 z-30">
         <button
           onClick={() => setMobileCartOpen(true)}
           className="w-full bg-gradient-to-r from-purple-950 via-rose-700 to-purple-950 text-white p-3.5 rounded-2xl shadow-2xl flex items-center justify-between border border-rose-500/30 active:scale-98 transition"
@@ -1001,8 +1015,14 @@ export default function BillingPage() {
 
       {/* Mobile Cart Bottom Sheet Modal */}
       {mobileCartOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto p-4 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-200">
+        <div
+          className="lg:hidden fixed inset-0 !m-0 !p-0 w-screen h-screen min-h-[100dvh] z-[70] bg-slate-950/70 backdrop-blur-md flex flex-col justify-end"
+          onClick={() => setMobileCartOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto p-4 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-200"
+          >
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-rose-600" />
@@ -1115,7 +1135,7 @@ export default function BillingPage() {
 
       {/* Invoice Modal for Printing & WhatsApp Sharing */}
       {showInvoiceModal && lastSale && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div className="fixed inset-0 !m-0 !p-0 w-screen h-screen min-h-[100dvh] z-[70] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-6 animate-in zoom-in-95 duration-150">
             {/* Modal Controls Bar (Hidden during print) */}
             <div className="no-print bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
@@ -1155,15 +1175,18 @@ export default function BillingPage() {
                   className="w-12 h-12 object-contain mx-auto mb-2"
                 />
                 <h2 className="font-heading font-black text-xl tracking-tight text-slate-950 uppercase">
-                  VR FASHION PALACE
+                  V.R. FASHION PALACE
                 </h2>
                 <p className="text-[11px] font-bold text-rose-700 tracking-wide mt-0.5">
-                  Women & Kids Wear Boutique
+                  Women & Kids Wear
                 </p>
-                <p className="text-[10px] text-slate-500 mt-1">
-                  Shop No. 12-14, Fashion Street, Main City Center
+                <p className="text-[10px] text-slate-600 mt-1 font-medium">
+                  Near check post, Kozhivilai
                 </p>
-                <p className="text-[10px] text-slate-500">Phone: +91 98765 43210</p>
+                <p className="text-[10px] text-slate-600 font-medium">
+                  Kaliyakkavilai (p.o), Pin: 629153
+                </p>
+                <p className="text-[10px] font-bold text-slate-800 mt-0.5">Phone: 8903940644</p>
               </div>
 
               {/* Invoice Meta */}
@@ -1234,7 +1257,7 @@ export default function BillingPage() {
 
               {/* Footer Note */}
               <div className="text-center pt-4 border-t border-dashed border-slate-300 text-[10px] text-slate-500 space-y-0.5">
-                <p className="font-bold text-slate-700">Thank you for shopping at VR Fashion Palace!</p>
+                <p className="font-bold text-slate-700">Thank you for shopping at V.R. Fashion Palace!</p>
                 <p>Goods once sold can be exchanged within 7 days with bill.</p>
                 <p>*** Please Visit Again ***</p>
               </div>

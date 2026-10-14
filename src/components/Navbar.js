@@ -77,54 +77,44 @@ export default function Navbar() {
   return (
     <>
       {/* Top Navbar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm transition-all">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Left Section: Brand Logo (and mobile-only hamburger toggle) */}
-            <div className="flex items-center gap-2.5 sm:gap-4">
-              {/* Mobile-Only Sidebar Toggle Button (Hidden on Big Screen) */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-8">
+          <div className="flex items-center h-16 gap-3">
+
+            {/* ── LEFT: Hamburger + Brand ── */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Mobile hamburger (hidden on lg+) */}
               <button
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-50 hover:bg-rose-50 text-slate-700 hover:text-rose-700 transition active:scale-95 flex items-center justify-center"
-                aria-label="Toggle Side Menu"
-                title="Toggle Menu"
+                className="lg:hidden w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-rose-50 hover:border-rose-300 text-slate-600 hover:text-rose-700 transition active:scale-95 shrink-0"
+                aria-label="Toggle Menu"
               >
-                <Menu className="w-5 h-5 text-slate-700" />
+                <Menu className="w-5 h-5" />
               </button>
 
-              {/* Logo & Brand */}
+              {/* Brand */}
               <Link
                 href={user.role === 'admin' ? '/' : '/billing'}
-                className="flex items-center gap-2.5 sm:gap-3 group shrink-0"
+                className="flex items-center gap-2 group shrink-0"
               >
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl overflow-hidden shadow-md shadow-amber-950/20 bg-black border border-amber-400/40 p-0.5 group-hover:scale-105 transition-transform flex items-center justify-center">
-                  <img
-                    src="/logo.png"
-                    alt="VR Fashion Palace Logo"
-                    className="w-full h-full object-contain rounded-[14px]"
-                  />
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden bg-black border border-amber-400/40 p-0.5 group-hover:scale-105 transition-transform shrink-0 flex items-center justify-center">
+                  <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-lg" />
                 </div>
-                <div>
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="font-heading text-base sm:text-2xl font-black tracking-tight bg-gradient-to-r from-purple-950 via-rose-700 to-purple-900 bg-clip-text text-transparent">
-                      VR FASHION PALACE
-                    </span>
-                    <span className="hidden sm:inline-block px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
-                      Boutique
-                    </span>
-                  </div>
-                  <p className="text-[10px] sm:text-xs text-rose-800/80 font-semibold tracking-wide flex items-center gap-1">
-                    <span>Women & Kids Wear</span>
-                    <span className="text-rose-400">&bull;</span>
-                    <span className="text-slate-500 font-medium">Billing POS</span>
+                <div className="hidden sm:block leading-tight">
+                  <p className="font-heading text-sm lg:text-base font-black tracking-tight bg-gradient-to-r from-purple-950 via-rose-700 to-purple-900 bg-clip-text text-transparent whitespace-nowrap">
+                    VR FASHION PALACE
                   </p>
+                  <p className="text-[10px] text-rose-700/70 font-semibold hidden xl:block">Women &amp; Kids Wear · Billing POS</p>
                 </div>
+                <span className="sm:hidden font-heading text-sm font-black bg-gradient-to-r from-purple-950 via-rose-700 to-purple-900 bg-clip-text text-transparent whitespace-nowrap">
+                  VR Fashion
+                </span>
               </Link>
             </div>
 
-            {/* Desktop Navigation Links (Big Screen Only) */}
-            <nav className="hidden lg:flex items-center gap-1.5">
+            {/* ── CENTER: Desktop Nav Links ── */}
+            <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 flex-1 justify-center">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href;
@@ -132,54 +122,46 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                    className={`flex items-center gap-1.5 h-9 px-3 xl:px-3.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                       isActive
-                        ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25'
-                        : 'text-slate-600 hover:text-rose-700 hover:bg-rose-50/60'
+                        ? 'bg-rose-600 text-white shadow-sm shadow-rose-600/30'
+                        : 'text-slate-600 hover:text-rose-700 hover:bg-rose-50'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-rose-500'}`} />
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                     <span>{link.name}</span>
                   </Link>
                 );
               })}
             </nav>
 
-            {/* Right Section Actions */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Quick POS New Bill Button */}
+            {/* ── RIGHT: New Bill + User ── */}
+            <div className="flex items-center gap-2 shrink-0 ml-auto lg:ml-0">
+              {/* New Bill */}
               <Link
                 href="/billing"
-                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-rose-600/20 transition active:scale-95"
+                className="flex items-center gap-1.5 h-9 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs sm:text-sm font-bold shadow-sm shadow-rose-600/25 transition active:scale-95 whitespace-nowrap shrink-0"
               >
-                <Receipt className="w-4 h-4" />
+                <Receipt className="w-4 h-4 shrink-0" />
                 <span className="hidden sm:inline">New Bill</span>
                 <span className="sm:hidden">POS</span>
               </Link>
 
-              {/* User Dropdown */}
-              <div className="relative">
+              {/* User dropdown */}
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition"
+                  className="flex items-center gap-2 h-9 px-2 sm:px-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition"
                   aria-label="User Menu"
                 >
-                  <div
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold ${
-                      user.role === 'admin'
-                        ? 'bg-gradient-to-br from-amber-500 to-rose-600 shadow-sm shadow-amber-500/20'
-                        : 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm shadow-blue-500/20'
-                    }`}
-                  >
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white shrink-0 ${
+                    user.role === 'admin'
+                      ? 'bg-gradient-to-br from-amber-500 to-rose-600'
+                      : 'bg-gradient-to-br from-blue-500 to-indigo-600'
+                  }`}>
                     {user.role === 'admin' ? <Shield className="w-4 h-4" /> : <User className="w-4 h-4" />}
                   </div>
-                  <div className="hidden sm:block text-left">
-                    <p className="text-xs font-bold text-slate-800 leading-none">{user.displayName || user.username}</p>
-                    <p className="text-[10px] font-semibold text-rose-600 capitalize leading-tight mt-0.5">
-                      {user.role === 'admin' ? 'Store Admin' : 'Cashier Staff'}
-                    </p>
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                 </button>
 
                 {showUserMenu && (
@@ -187,11 +169,9 @@ export default function Navbar() {
                     <div className="px-4 py-2.5 border-b border-slate-100">
                       <p className="text-xs font-bold text-slate-900">{user.displayName || user.username}</p>
                       <p className="text-[11px] text-slate-400 font-mono">@{user.username}</p>
-                      <span
-                        className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                          user.role === 'admin' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
-                        }`}
-                      >
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        user.role === 'admin' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
                         {user.role === 'admin' ? 'Full Admin Access' : 'Cashier Billing Access'}
                       </span>
                     </div>
@@ -200,24 +180,25 @@ export default function Navbar() {
                       <Link
                         href="/admin/users"
                         onClick={() => setShowUserMenu(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-rose-50 hover:text-rose-700 transition"
                       >
-                        <Users className="w-4 h-4 text-slate-400" />
+                        <Users className="w-4 h-4 text-slate-400 shrink-0" />
                         <span>Manage Staff Accounts</span>
                       </Link>
                     )}
 
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 transition text-left"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition text-left"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="w-4 h-4 shrink-0" />
                       <span>Sign Out</span>
                     </button>
                   </div>
                 )}
               </div>
             </div>
+
           </div>
         </div>
       </header>
@@ -310,54 +291,7 @@ export default function Navbar() {
         </div>
       </aside>
 
-      {/* Mobile Bottom Quick-Access Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 shadow-2xl flex items-center justify-around">
-        <button
-          onClick={() => setSidebarOpen(true)}
-          className="flex flex-col items-center gap-0.5 text-[10px] font-bold text-slate-600 hover:text-rose-600 transition"
-        >
-          <Menu className="w-4 h-4 text-slate-700" />
-          <span>Menu</span>
-        </button>
 
-        <Link
-          href="/"
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
-            pathname === '/' ? 'text-rose-600 font-extrabold' : 'text-slate-500 hover:text-slate-900'
-          }`}
-        >
-          <LayoutDashboard className="w-4 h-4" />
-          <span>Home</span>
-        </Link>
-
-        <Link
-          href="/billing"
-          className="flex flex-col items-center gap-0.5 -mt-4 bg-gradient-to-tr from-purple-900 via-rose-600 to-pink-500 text-white px-4 py-2 rounded-2xl shadow-lg shadow-rose-600/30 text-[10px] font-black active:scale-95 transition"
-        >
-          <Receipt className="w-5 h-5" />
-          <span>New Bill</span>
-        </Link>
-
-        <Link
-          href="/inventory"
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
-            pathname === '/inventory' ? 'text-rose-600 font-extrabold' : 'text-slate-500 hover:text-slate-900'
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          <span>Stock</span>
-        </Link>
-
-        <Link
-          href="/invoices"
-          className={`flex flex-col items-center gap-0.5 text-[10px] font-bold transition ${
-            pathname === '/invoices' ? 'text-rose-600 font-extrabold' : 'text-slate-500 hover:text-slate-900'
-          }`}
-        >
-          <FileText className="w-4 h-4" />
-          <span>Invoices</span>
-        </Link>
-      </div>
     </>
   );
 }

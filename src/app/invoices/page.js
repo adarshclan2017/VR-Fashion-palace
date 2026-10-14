@@ -148,7 +148,7 @@ export default function InvoicesPage() {
 
   // Helper to build a complete WhatsApp message with boutique branding, items list, and bill link
   const buildWhatsAppMessage = (sale, billUrl) => {
-    const shopName = 'VR FASHION PALACE';
+    const shopName = 'V.R. FASHION PALACE';
     const customerName = sale.customer?.name || 'Valued Customer';
     const inv = sale.invoiceNumber;
     const total = Number(sale.grandTotal || 0).toLocaleString('en-IN');
@@ -163,7 +163,9 @@ export default function InvoicesPage() {
 
     return (
       `👗 *${shopName}* 🛍️\n` +
-      `_Women & Kids Wear Boutique_\n\n` +
+      `_Women & Kids Wear_\n` +
+      `📍 Near check post, Kozhivilai, Kaliyakkavilai (P.O), Pin: 629153\n` +
+      `📞 Phone: 8903940644\n\n` +
       `🙏 *Thank you for shopping with us!*\n\n` +
       `🧾 *Bill No:* ${inv}\n` +
       `📅 *Date:* ${date}\n` +
@@ -687,15 +689,18 @@ export default function InvoicesPage() {
                   className="w-12 h-12 object-contain mx-auto mb-2"
                 />
                 <h2 className="font-heading font-black text-xl tracking-tight uppercase">
-                  VR FASHION PALACE
+                  V.R. FASHION PALACE
                 </h2>
                 <p className="text-[11px] font-bold text-rose-700 tracking-wide mt-0.5">
-                  Women & Kids Wear Boutique
+                  Women & Kids Wear
                 </p>
-                <p className="text-[10px] text-slate-500 mt-1">
-                  Shop No. 12-14, Fashion Street, Main City Center
+                <p className="text-[10px] text-slate-600 mt-1 font-medium">
+                  Near check post, Kozhivilai
                 </p>
-                <p className="text-[10px] text-slate-500">Phone: +91 98765 43210</p>
+                <p className="text-[10px] text-slate-600 font-medium">
+                  Kaliyakkavilai (p.o), Pin: 629153
+                </p>
+                <p className="text-[10px] font-bold text-slate-800 mt-0.5">Phone: 8903940644</p>
               </div>
 
               <div className="py-3 border-b border-dashed border-slate-300 flex justify-between text-[11px]">
@@ -756,7 +761,7 @@ export default function InvoicesPage() {
               </div>
 
               <div className="text-center pt-4 border-t border-dashed border-slate-300 text-[10px] text-slate-500 space-y-0.5">
-                <p className="font-bold text-slate-700">Thank you for shopping at VR Fashion Palace!</p>
+                <p className="font-bold text-slate-700">Thank you for shopping at V.R. Fashion Palace!</p>
                 <p>Goods once sold can be exchanged within 7 days with bill.</p>
                 <p>*** Please Visit Again ***</p>
               </div>

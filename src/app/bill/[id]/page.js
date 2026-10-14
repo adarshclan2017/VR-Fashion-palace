@@ -72,8 +72,8 @@ export default function PublicBillPage() {
     if (!sale) return;
     const billUrl = typeof window !== 'undefined' ? window.location.href : '';
     const text = encodeURIComponent(
-      `👗 *VR FASHION PALACE* 🛍️\n` +
-      `Here is my shopping bill from VR Fashion Palace!\n` +
+      `👗 *V.R. FASHION PALACE* 🛍️\n` +
+      `Here is my shopping bill from V.R. Fashion Palace!\n` +
       `Bill #${sale.invoiceNumber} • Total: ₹${sale.grandTotal}\n\n` +
       `View digital e-bill: ${billUrl}`
     );
@@ -121,15 +121,18 @@ export default function PublicBillPage() {
               <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-xl" />
             </div>
             <h1 className="font-heading text-xl sm:text-2xl font-black tracking-tight uppercase">
-              VR FASHION PALACE
+              V.R. FASHION PALACE
             </h1>
             <p className="text-xs text-rose-200/90 font-semibold mt-0.5">
-              Women & Kids Wear Boutique
+              Women & Kids Wear
             </p>
-            <p className="text-[11px] text-slate-300 mt-1">
-              Shop No. 12-14, Fashion Street, Main City Center
+            <p className="text-[11px] text-slate-200 mt-1">
+              Near check post, Kozhivilai
             </p>
-            <p className="text-[11px] text-slate-300">Phone: +91 98765 43210</p>
+            <p className="text-[11px] text-slate-200">
+              Kaliyakkavilai (p.o), Pin: 629153
+            </p>
+            <p className="text-[11px] font-bold text-amber-300 mt-0.5">Phone: 8903940644</p>
 
             {/* Verified Digital E-Bill Badge */}
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase tracking-wider mt-3">
@@ -225,7 +228,7 @@ export default function PublicBillPage() {
             {/* Footer Note */}
             <div className="pt-4 border-t border-dashed border-slate-200 text-center text-[11px] text-slate-500 space-y-1">
               <p className="font-bold text-slate-800">
-                Thank you for shopping at VR Fashion Palace!
+                Thank you for shopping at V.R. Fashion Palace!
               </p>
               <p className="text-[10px] text-slate-400">
                 For exchange or queries, please bring this digital e-bill within 7 days.

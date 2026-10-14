@@ -16,7 +16,7 @@ export async function POST(request) {
     }
 
     const recipient = cleanPhone.slice(-10);
-    const smsMessage = `VR Fashion Palace: Dear ${customerName || 'Customer'}, your bill of Rs. ${grandTotal || 0} (Bill #${invoiceNumber}) is ready. View/Download your digital e-bill here: ${billUrl} . Thank you for shopping! Helpline: +91 98765 43210`;
+    const smsMessage = `V.R. Fashion Palace: Dear ${customerName || 'Customer'}, your bill of Rs. ${grandTotal || 0} (Bill #${invoiceNumber}) is ready. View/Download your digital e-bill here: ${billUrl} . Thank you for shopping! Contact: 8903940644`;
 
     console.log(`[SMS DISPATCH] Sending to +91${recipient}: "${smsMessage}"`);
 

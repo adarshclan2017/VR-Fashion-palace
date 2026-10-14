@@ -184,7 +184,7 @@ export async function POST(request) {
       grandTotal,
       paymentMode: paymentMode || 'UPI',
       paymentStatus: paymentStatus || 'Paid',
-      notes: notes || 'Thank you for shopping at VR Fashion Palace!',
+      notes: notes || 'Thank you for shopping at V.R. Fashion Palace!',
       createdBy,
     });
 
