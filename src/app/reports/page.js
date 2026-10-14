@@ -84,12 +84,8 @@ export default function ReportsPage() {
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
       {/* Header with Title and Tab Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
-            <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-lg" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
+        <div>
+          <div className="flex items-center gap-2 mb-0.5">
               <h1 className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                 Sales Reports
               </h1>
@@ -101,7 +97,6 @@ export default function ReportsPage() {
               Weekly & monthly sales analytics, top outfits, revenue insights
             </p>
           </div>
-        </div>
 
         <div className="flex items-center gap-2.5">
           {/* Tab Switcher */}

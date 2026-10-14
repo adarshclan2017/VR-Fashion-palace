@@ -194,21 +194,16 @@ export default function AdminUsersPage() {
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
-            <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-lg" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold border border-rose-100">
+            <Users className="w-5 h-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <h1 className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                Staff & User Management
-              </h1>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
-                VR Fashion Palace
-              </span>
-            </div>
+            <h1 className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+              Staff & User Management
+            </h1>
             <p className="text-xs text-slate-500 font-medium">
-              Manage Admin accounts and Staff Cashier counter billing accounts
+              Manage accounts, cashier staff credentials & system permissions
             </p>
           </div>
         </div>
@@ -220,33 +215,6 @@ export default function AdminUsersPage() {
           <UserPlus className="w-4 h-4" />
           <span>Add New Staff / User</span>
         </button>
-      </div>
-
-      {/* Role explanation alert */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/60 flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-amber-100 text-amber-700 mt-0.5">
-            <Shield className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-amber-900">Admin Role (Full Overview Access)</h3>
-            <p className="text-xs text-amber-800/90 mt-0.5 leading-relaxed">
-              Full access to Dashboard KPIs, inventory stock pieces, weekly/monthly sales reports, staff user accounts, and counter POS billing.
-            </p>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/60 flex items-start gap-3">
-          <div className="p-2 rounded-lg bg-blue-100 text-blue-700 mt-0.5">
-            <User className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-blue-900">Employee Role (Billing & Basic Access)</h3>
-            <p className="text-xs text-blue-800/90 mt-0.5 leading-relaxed">
-              Fast counter billing POS, customer invoice printing, and bill history. Restricted from viewing financial profit reports, stock editing, and admin configurations.
-            </p>
-          </div>
-        </div>
       </div>
 
       {/* Feedback Messages */}
@@ -511,13 +479,10 @@ export default function AdminUsersPage() {
                         : 'border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-blue-600" />
                       <span className="text-xs font-bold text-slate-900">Employee</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-tight">
-                      Billing POS & receipt printing only.
-                    </p>
                   </button>
 
                   <button
@@ -529,13 +494,10 @@ export default function AdminUsersPage() {
                         : 'border-slate-200 hover:bg-slate-50'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-amber-600" />
                       <span className="text-xs font-bold text-slate-900">Admin</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-tight">
-                      Full overview, reports & stock edit.
-                    </p>
                   </button>
                 </div>
               </div>

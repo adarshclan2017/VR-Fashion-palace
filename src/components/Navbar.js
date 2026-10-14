@@ -16,9 +16,7 @@ import {
   Users,
   Menu,
   X,
-  ChevronDown,
-  ChevronRight,
-  Sparkles
+  ChevronDown
 } from 'lucide-react';
 
 export default function Navbar() {
@@ -59,12 +57,12 @@ export default function Navbar() {
   if (!user || pathname === '/login') return null;
 
   const allNavLinks = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, badge: 'Overview' },
-    { name: 'New Bill (POS)', href: '/billing', icon: Receipt, badge: 'Fast POS' },
-    { name: 'Stock & Apparel', href: '/inventory', icon: Layers, badge: 'Inventory' },
-    { name: 'Invoices & History', href: '/invoices', icon: FileText, badge: 'Receipts' },
-    { name: 'Sales Reports', href: '/reports', icon: BarChart3, badge: 'Analytics' },
-    { name: 'Staff Users', href: '/admin/users', icon: Users, badge: 'Admin Only' },
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'New Bill (POS)', href: '/billing', icon: Receipt },
+    { name: 'Stock & Apparel', href: '/inventory', icon: Layers },
+    { name: 'Invoices & History', href: '/invoices', icon: FileText },
+    { name: 'Sales Reports', href: '/reports', icon: BarChart3 },
+    { name: 'Staff Users', href: '/admin/users', icon: Users },
   ];
 
   // Filter links based on user role
@@ -82,20 +80,17 @@ export default function Navbar() {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-rose-100 shadow-sm transition-all">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Left Section: Sidebar Toggle & Brand Logo */}
+            {/* Left Section: Brand Logo (and mobile-only hamburger toggle) */}
             <div className="flex items-center gap-2.5 sm:gap-4">
-              {/* Sidebar Toggle Button */}
+              {/* Mobile-Only Sidebar Toggle Button (Hidden on Big Screen) */}
               <button
                 type="button"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-50 hover:bg-rose-50/70 text-slate-700 hover:text-rose-700 transition active:scale-95 flex items-center gap-2"
-                aria-label="Toggle Side Navigation Bar"
-                title="Toggle Side Menu"
+                className="lg:hidden p-2 rounded-xl border border-slate-200 hover:border-rose-300 bg-slate-50 hover:bg-rose-50 text-slate-700 hover:text-rose-700 transition active:scale-95 flex items-center justify-center"
+                aria-label="Toggle Side Menu"
+                title="Toggle Menu"
               >
-                <Menu className="w-5 h-5 sm:w-5 sm:h-5 text-slate-700 hover:text-rose-600" />
-                <span className="hidden md:inline-block text-xs font-black tracking-wide text-slate-700 uppercase">
-                  Menu
-                </span>
+                <Menu className="w-5 h-5 text-slate-700" />
               </button>
 
               {/* Logo & Brand */}
@@ -128,8 +123,8 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden xl:flex items-center gap-1.5">
+            {/* Desktop Navigation Links (Big Screen Only) */}
+            <nav className="hidden lg:flex items-center gap-1.5">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href;
@@ -137,7 +132,7 @@ export default function Navbar() {
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                       isActive
                         ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25'
                         : 'text-slate-600 hover:text-rose-700 hover:bg-rose-50/60'
@@ -155,7 +150,7 @@ export default function Navbar() {
               {/* Quick POS New Bill Button */}
               <Link
                 href="/billing"
-                className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-rose-600/20 transition active:scale-95"
+                className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-rose-600/20 transition active:scale-95"
               >
                 <Receipt className="w-4 h-4" />
                 <span className="hidden sm:inline">New Bill</span>
@@ -227,70 +222,54 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* Side Navigation Bar (Toggleable Drawer) */}
+      {/* Side Navigation Bar (SMALL SCREEN ONLY: lg:hidden) */}
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 transition-opacity duration-300 ${
+        className={`lg:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 transition-opacity duration-200 ${
           sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setSidebarOpen(false)}
         aria-hidden="true"
       />
 
-      {/* Sidebar Drawer Container */}
+      {/* Simple Mobile Sidebar Drawer */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 w-72 sm:w-80 bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950 text-white z-50 shadow-2xl flex flex-col border-r border-rose-900/30 transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed top-0 bottom-0 left-0 w-72 max-w-[85vw] bg-white text-slate-800 z-50 shadow-2xl flex flex-col border-r border-slate-200 transition-transform duration-200 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
         aria-label="Side Navigation Bar"
       >
-        {/* Sidebar Header */}
-        <div className="p-5 border-b border-white/10 flex items-center justify-between bg-black/30">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-lg bg-black border border-amber-400/40 p-1 shrink-0 flex items-center justify-center">
+        {/* Simple Header with VR Logo */}
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-sm bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
               <img
                 src="/logo.png"
                 alt="VR Fashion Palace"
-                className="w-full h-full object-contain rounded-xl"
+                className="w-full h-full object-contain rounded-lg"
               />
             </div>
             <div>
-              <h2 className="font-heading text-lg font-black tracking-tight text-white leading-tight">
-                VR FASHION
+              <h2 className="font-heading text-sm font-black text-slate-900 leading-tight">
+                VR FASHION PALACE
               </h2>
-              <p className="text-[11px] font-semibold text-amber-300 tracking-wider uppercase">
-                Palace Boutique
+              <p className="text-[10px] font-semibold text-rose-600">
+                Women & Kids Wear
               </p>
             </div>
           </div>
 
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition"
-            aria-label="Close sidebar"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition"
+            aria-label="Close menu"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Sidebar Quick Action */}
-        <div className="p-4 border-b border-white/10 bg-white/5">
-          <Link
-            href="/billing"
-            onClick={() => setSidebarOpen(false)}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-rose-600 via-pink-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white text-xs font-black shadow-lg shadow-rose-900/40 transition active:scale-95"
-          >
-            <Receipt className="w-4 h-4" />
-            <span>+ Open Billing Counter</span>
-          </Link>
-        </div>
-
-        {/* Sidebar Navigation Links */}
-        <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-          <div className="px-3 pb-2 text-[10px] font-black uppercase tracking-wider text-rose-300/70">
-            Navigation Menu
-          </div>
-
+        {/* Clean, Simple Navigation List (FA-style minimal UI) */}
+        <div className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
           {navLinks.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
@@ -299,86 +278,39 @@ export default function Navbar() {
                 key={link.name}
                 href={link.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold transition-all group ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition ${
                   isActive
-                    ? 'bg-rose-600 text-white shadow-lg shadow-rose-900/40 font-black'
-                    : 'text-slate-300 hover:bg-white/10 hover:text-white'
+                    ? 'bg-rose-50 text-rose-700 font-bold border-l-4 border-rose-600'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-1.5 rounded-lg ${
-                      isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-rose-300 group-hover:text-white'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                  </div>
-                  <span>{link.name}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  {link.badge && (
-                    <span
-                      className={`text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
-                        isActive
-                          ? 'bg-white text-rose-700'
-                          : 'bg-white/10 text-slate-300'
-                      }`}
-                    >
-                      {link.badge}
-                    </span>
-                  )}
-                  <ChevronRight
-                    className={`w-3.5 h-3.5 transition-transform ${
-                      isActive ? 'text-white translate-x-0.5' : 'text-slate-500 group-hover:text-slate-300'
-                    }`}
-                  />
-                </div>
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-rose-600' : 'text-slate-500'}`} />
+                <span>{link.name}</span>
               </Link>
             );
           })}
         </div>
 
-        {/* User Card & Sign Out at Bottom of Sidebar */}
-        <div className="p-4 border-t border-white/10 bg-black/40">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2.5">
-              <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center text-white text-xs font-bold ${
-                  user.role === 'admin'
-                    ? 'bg-gradient-to-br from-amber-500 to-rose-600 shadow-sm'
-                    : 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-sm'
-                }`}
-              >
-                {user.role === 'admin' ? <Shield className="w-4 h-4" /> : <User className="w-4 h-4" />}
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white leading-tight">
-                  {user.displayName || user.username}
-                </p>
-                <span
-                  className={`inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider ${
-                    user.role === 'admin'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                      : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
-                  }`}
-                >
-                  {user.role === 'admin' ? 'Store Admin' : 'Staff Cashier'}
-                </span>
-              </div>
+        {/* Simple User Footer & Sign Out */}
+        <div className="p-3 border-t border-slate-100 bg-slate-50">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="text-xs">
+              <p className="font-bold text-slate-900">{user.displayName || user.username}</p>
+              <p className="text-[10px] text-slate-500 capitalize">{user.role}</p>
             </div>
           </div>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 hover:text-red-200 border border-red-500/30 text-xs font-bold transition"
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition"
           >
             <LogOut className="w-4 h-4" />
-            <span>Sign Out Account</span>
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
 
-      {/* Mobile Bottom Quick-Access Bar (for quick POS billing on touch devices) */}
+      {/* Mobile Bottom Quick-Access Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 shadow-2xl flex items-center justify-around">
         <button
           onClick={() => setSidebarOpen(true)}

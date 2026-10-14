@@ -364,15 +364,10 @@ export default function InventoryPage() {
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
       {/* Top Header */}
       <div className="flex items-center justify-between pb-2 border-b border-slate-200/70">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl overflow-hidden shadow-sm bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
-            <img src="/logo.png" alt="VR Logo" className="w-full h-full object-contain rounded-lg" />
-          </div>
-          <div>
-            <h1 className="font-heading text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Stock & Inventory
-            </h1>
-          </div>
+        <div>
+          <h1 className="font-heading text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Stock & Inventory
+          </h1>
         </div>
 
         <button
@@ -749,7 +744,6 @@ export default function InventoryPage() {
           <div className="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-200 my-6 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="VR Logo" className="w-6 h-6 object-contain rounded-md" />
                 <h2 className="font-heading font-black text-lg text-slate-900">
                   {editingProduct ? 'Edit Fashion Outfit' : 'Add New Fashion Outfit'}
                 </h2>

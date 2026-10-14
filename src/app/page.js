@@ -73,129 +73,119 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5 sm:space-y-6">
-      {/* Top Boutique Banner & Fast Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white rounded-2xl p-4 sm:p-5 border border-rose-100 shadow-sm">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md bg-black border border-amber-400/40 p-0.5 shrink-0 flex items-center justify-center">
-            <img src="/logo.png" alt="VR Fashion Palace" className="w-full h-full object-contain rounded-lg" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                Store Overview
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-200">
-                VR Fashion Palace
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 font-medium">
-              Sales analytics, counter billing, stock levels & performance
-            </p>
-          </div>
+      {/* Top Header & Fast Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 bg-white rounded-2xl p-4 sm:p-5 border border-rose-100 shadow-sm">
+        <div>
+          <h1 className="font-heading text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+            Store Overview
+          </h1>
+          <p className="text-xs text-slate-500 font-medium">
+            Live sales analytics, counter billing, stock levels & performance
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
           <Link
             href="/billing"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/25 transition active:scale-95"
+            className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/25 transition active:scale-95 text-center"
           >
-            <Receipt className="w-4 h-4" />
-            <span>Generate New Bill</span>
+            <Receipt className="w-4 h-4 shrink-0" />
+            <span>New Bill</span>
           </Link>
 
           <Link
             href="/inventory"
-            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition"
+            className="flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm transition text-center"
           >
-            <Layers className="w-4 h-4" />
+            <Layers className="w-4 h-4 shrink-0" />
             <span>Stock & Apparel</span>
           </Link>
         </div>
       </div>
 
-      {/* KPI Cards — 2 on top row, 3 on second row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-5">
+      {/* KPI Cards in 2-Column Mobile Grid */}
+      <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
         {/* Today's Revenue */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-rose-100 shadow-sm hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Today&apos;s Revenue</span>
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-              <Calendar className="w-4 h-4" />
+        <div className="bg-white rounded-2xl p-3.5 sm:p-5 border border-rose-100 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Today Revenue</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 font-heading">
+          <div className="text-lg sm:text-2xl lg:text-3xl font-black text-slate-900 font-heading">
             ₹{stats.todayRevenue ? stats.todayRevenue.toLocaleString('en-IN') : '0'}
           </div>
-          <div className="flex items-center justify-between text-xs text-slate-500 mt-2 font-medium">
-            <span>{stats.todayOrders || 0} bills generated</span>
-            <span className="text-rose-600 font-bold">{stats.todayUnits || 0} outfits sold</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-1.5 font-medium">
+            <span>{stats.todayOrders || 0} bills</span>
+            <span className="text-rose-600 font-bold">{stats.todayUnits || 0} sold</span>
           </div>
         </div>
 
         {/* Today's Profit */}
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-5 border border-emerald-200 shadow-sm hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Today&apos;s Profit</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
-              <DollarSign className="w-4 h-4" />
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-3.5 sm:p-5 border border-emerald-200 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-emerald-700 uppercase tracking-wider">Today Profit</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+              <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-heading">
+          <div className="text-lg sm:text-2xl lg:text-3xl font-black text-emerald-700 font-heading">
             ₹{stats.todayProfit != null ? stats.todayProfit.toLocaleString('en-IN') : '0'}
           </div>
-          <div className="text-xs text-emerald-600 mt-2 font-semibold">
-            Net profit after cost deduction
+          <div className="text-[11px] sm:text-xs text-emerald-600 mt-1.5 font-semibold">
+            Net profit today
           </div>
         </div>
       </div>
 
-      {/* Second row — 3 cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5">
+      {/* Second KPI Row — 2-Column Grid on Mobile */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
         {/* This Week */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-purple-100 shadow-sm hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">This Week Sales</span>
-            <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
-              <TrendingUp className="w-4 h-4" />
+        <div className="bg-white rounded-2xl p-3.5 sm:p-5 border border-purple-100 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Week Sales</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 font-heading">
+          <div className="text-lg sm:text-2xl lg:text-3xl font-black text-slate-900 font-heading">
             ₹{stats.weekRevenue ? stats.weekRevenue.toLocaleString('en-IN') : '0'}
           </div>
-          <div className="flex items-center justify-between text-xs text-slate-500 mt-2 font-medium">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-1.5 font-medium">
             <span>{stats.weekOrders || 0} orders</span>
-            <span className="text-purple-600 font-bold">{stats.weekUnits || 0} pieces</span>
+            <span className="text-purple-600 font-bold">{stats.weekUnits || 0} pcs</span>
           </div>
         </div>
 
         {/* Monthly Profit */}
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-4 sm:p-5 border border-amber-200 shadow-sm hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">Month Profit</span>
-            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
-              <Sparkles className="w-4 h-4" />
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-3.5 sm:p-5 border border-amber-200 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-amber-700 uppercase tracking-wider">Month Profit</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
+              <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-amber-700 font-heading">
+          <div className="text-lg sm:text-2xl lg:text-3xl font-black text-amber-700 font-heading">
             ₹{stats.monthProfit != null ? stats.monthProfit.toLocaleString('en-IN') : '0'}
           </div>
-          <div className="text-xs text-amber-600 mt-2 font-semibold">
-            {stats.monthOrders || 0} bills · {stats.monthUnits || 0} pieces sold
+          <div className="text-[11px] sm:text-xs text-amber-600 mt-1.5 font-semibold">
+            {stats.monthOrders || 0} bills · {stats.monthUnits || 0} sold
           </div>
         </div>
 
         {/* Stock Value */}
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-amber-100 shadow-sm hover:shadow-md transition">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Shop Stock Value</span>
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-              <Package className="w-4 h-4" />
+        <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 border border-amber-100 shadow-sm hover:shadow-md transition">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider">Shop Stock Value</span>
+            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+              <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 font-heading">
+          <div className="text-lg sm:text-2xl lg:text-3xl font-black text-slate-900 font-heading">
             ₹{stats.inventoryRetailValue ? stats.inventoryRetailValue.toLocaleString('en-IN') : '0'}
           </div>
-          <div className="flex items-center justify-between text-xs text-slate-500 mt-2 font-medium">
+          <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-1.5 font-medium">
             <span>{stats.totalStockUnits || 0} outfits</span>
             {stats.lowStockCount > 0 ? (
               <span className="text-red-600 font-bold">{stats.lowStockCount} low stock!</span>
