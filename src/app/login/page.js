@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { Scissors, LogIn, Eye, EyeOff, Shield, User, Loader2, AlertCircle } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Shield, User, Loader2, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,25 +13,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [setupDone, setSetupDone] = useState(false);
-  const [setupInfo, setSetupInfo] = useState(null);
 
-  // Auto-setup default users if none exist
-  useEffect(() => {
-    const autoSetup = async () => {
-      try {
-        const res = await fetch('/api/auth/setup', { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-          setSetupInfo(data);
-          setSetupDone(true);
-        }
-      } catch {
-        // Setup may have already been done, that's fine
-      }
-    };
-    autoSetup();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,31 +83,9 @@ export default function LoginPage() {
         <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8 border border-rose-100">
           <div className="text-center mb-6">
             <h2 className="text-lg font-black text-slate-900 font-heading">Store Sign In</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Enter your credentials to access POS billing & inventory</p>
+            <p className="text-xs text-slate-500 mt-0.5">Sign in to access V.R. Fashion Palace store</p>
           </div>
 
-          {/* Setup Info Banner */}
-          {setupDone && setupInfo && (
-            <div className="mb-5 p-3.5 rounded-xl bg-teal-50 border border-teal-200">
-              <div className="flex items-center gap-2 mb-2">
-                <Shield className="w-4 h-4 text-teal-700" />
-                <span className="text-xs font-bold text-teal-800">Default accounts created!</span>
-              </div>
-              <div className="space-y-1.5">
-                {setupInfo.users?.map((u) => (
-                  <div key={u.username} className="flex items-center justify-between text-xs bg-white rounded-lg px-3 py-1.5 border border-teal-100">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        u.role === 'admin' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
-                      }`}>{u.role}</span>
-                      <span className="font-semibold text-slate-800">{u.username}</span>
-                    </div>
-                    <span className="font-mono text-slate-500">{u.password}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Error message */}
           {error && (
@@ -196,61 +156,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Quick Demo Credentials & Fill Buttons */}
-          <div className="mt-6 pt-5 border-t border-slate-100">
-            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5 text-center">
-              Quick Login / Access Roles
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setUsername('admin');
-                  setPassword('admin123');
-                  setError('');
-                }}
-                className="p-3 rounded-xl bg-amber-50 hover:bg-amber-100/80 border border-amber-200 text-left transition group active:scale-[0.98]"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-amber-700" />
-                    <span className="text-xs font-bold text-amber-900">Admin</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-amber-700 underline group-hover:text-amber-900">
-                    Use
-                  </span>
-                </div>
-                <p className="text-[10px] text-amber-800 font-mono">admin / admin123</p>
-                <p className="text-[10px] text-amber-700/80 mt-1 leading-tight">
-                  Full overview: Dashboard, Stock, Reports
-                </p>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setUsername('employee');
-                  setPassword('emp123');
-                  setError('');
-                }}
-                className="p-3 rounded-xl bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-left transition group active:scale-[0.98]"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-blue-700" />
-                    <span className="text-xs font-bold text-blue-900">Employee</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-blue-700 underline group-hover:text-blue-900">
-                    Use
-                  </span>
-                </div>
-                <p className="text-[10px] text-blue-800 font-mono">employee / emp123</p>
-                <p className="text-[10px] text-blue-700/80 mt-1 leading-tight">
-                  Basic access: POS Billing & Invoices
-                </p>
-              </button>
-            </div>
-          </div>
         </div>
 
         <p className="text-center text-[11px] text-rose-200/70 mt-6 font-semibold">

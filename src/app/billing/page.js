@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 import {
   Search,
   Plus,
@@ -33,6 +34,7 @@ import {
 
 
 export default function BillingPage() {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [search, setSearch] = useState('');
@@ -107,8 +109,8 @@ export default function BillingPage() {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (user) fetchProducts();
+  }, [user]);
 
   // Dynamic sections derived from products + user-saved sections
   const sections = useMemo(() => {
@@ -293,7 +295,7 @@ export default function BillingPage() {
         },
         items: billItems,
         subtotal: billSummary.subtotal,
-        totalDiscount: 0,
+        totalDiscount: Math.round(billSummary.subtotal - billSummary.grandTotal), // ✅ actual discount
         totalTax: billSummary.totalTax,
         roundOff: billSummary.roundOff,
         grandTotal: billSummary.grandTotal,

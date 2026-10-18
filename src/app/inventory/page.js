@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/components/AuthProvider';
 import {
   Layers,
   Plus,
@@ -51,6 +52,7 @@ const saveLS = (key, val) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function InventoryPage() {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -130,6 +132,32 @@ export default function InventoryPage() {
     setNewCategoryText('');
   };
 
+  const handleDeleteSection = (secToDelete) => {
+    if (!window.confirm(`Delete section "${secToDelete}"? This only removes it from the list — existing products keep their section.`)) return;
+    const updated = sections.filter((s) => s !== secToDelete);
+    setSections(updated);
+    saveLS(LS_SECTIONS, updated);
+    // If the currently selected section in form is being deleted, switch to first remaining
+    if (formData.section === secToDelete) {
+      const nextSec = updated[0] || '';
+      const cats = categoriesMap[nextSec] || [];
+      setFormData((prev) => ({ ...prev, section: nextSec, category: cats[0] || '', size: getSizesForSection(nextSec)[0] || 'Free Size' }));
+    }
+  };
+
+  const handleDeleteCategory = (catToDelete) => {
+    if (!window.confirm(`Delete category "${catToDelete}"? This only removes it from the list — existing products keep their category.`)) return;
+    const sec = formData.section;
+    const existing = categoriesMap[sec] || [];
+    const updatedCats = existing.filter((c) => c !== catToDelete);
+    const updatedMap = { ...categoriesMap, [sec]: updatedCats };
+    setCategoriesMap(updatedMap);
+    saveLS(LS_CATEGORIES, updatedMap);
+    if (formData.category === catToDelete) {
+      setFormData((prev) => ({ ...prev, category: updatedCats[0] || '' }));
+    }
+  };
+
   // Size options: simple heuristic based on section name
   const getSizesForSection = (sec) => {
     const lower = (sec || '').toLowerCase();
@@ -157,8 +185,8 @@ export default function InventoryPage() {
   };
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (user) fetchProducts();
+  }, [user]);
 
 
 
@@ -797,6 +825,13 @@ export default function InventoryPage() {
                         title="Add new collection">
                         + Add
                       </button>
+                      {formData.section && sections.includes(formData.section) && (
+                        <button type="button" onClick={() => handleDeleteSection(formData.section)}
+                          className="px-2.5 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-100 transition shrink-0"
+                          title="Delete this section from list">
+                          🗑 Del
+                        </button>
+                      )}
                     </div>
                   )}
 
@@ -859,6 +894,13 @@ export default function InventoryPage() {
                         title="Add new category">
                         + Add
                       </button>
+                      {formData.category && (categoriesMap[formData.section] || []).includes(formData.category) && (
+                        <button type="button" onClick={() => handleDeleteCategory(formData.category)}
+                          className="px-2.5 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-100 transition shrink-0"
+                          title="Delete this category from list">
+                          🗑 Del
+                        </button>
+                      )}
                     </div>
                   )}
 

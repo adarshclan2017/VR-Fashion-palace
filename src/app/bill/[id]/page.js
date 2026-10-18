@@ -230,9 +230,6 @@ export default function PublicBillPage() {
               <p className="font-bold text-slate-800">
                 Thank you for shopping at V.R. Fashion Palace!
               </p>
-              <p className="text-[10px] text-slate-400">
-                For exchange or queries, please bring this digital e-bill within 7 days.
-              </p>
               <p className="text-[10px] font-semibold text-rose-700">*** Visit Again ***</p>
             </div>
           </div>
