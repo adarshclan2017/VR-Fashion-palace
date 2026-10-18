@@ -825,7 +825,13 @@ export default function BillingPage() {
                       </button>
                     </div>
                   </div>
-                      {/* Right Side: Current Bill / Checkout Cart (Cols 5 on Desktop, Full Width on Mobile Cart Tab) */}
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Current Bill / Checkout Cart (Cols 5 on Desktop, Full Width on Mobile Cart Tab) */}
         <div className={`${mobileTab === 'cart' ? 'block' : 'hidden'} lg:block lg:col-span-5 sticky top-20 space-y-4`}>
           <div className="bg-white rounded-2xl border border-rose-200/80 shadow-xl overflow-hidden flex flex-col">
             {/* Cart Header */}
