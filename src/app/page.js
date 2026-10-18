@@ -394,28 +394,38 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {recentSales.map((sale) => (
-                  <tr key={sale._id} className="hover:bg-slate-50/70 transition">
-                    <td className="py-3 px-3 font-mono font-bold text-slate-900">
-                      {sale.invoiceNumber}
-                    </td>
-                    <td className="py-3 px-3">
-                      <p className="font-bold text-slate-800">{sale.customer?.name || 'Walk-in'}</p>
-                      <p className="text-[10px] text-slate-400">{sale.customer?.phone || '-'}</p>
-                    </td>
-                    <td className="py-3 px-3 text-slate-600">
-                      {sale.items?.length || 1} items
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
-                        {sale.paymentMode}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right font-black text-slate-900">
-                      ₹{sale.grandTotal?.toLocaleString('en-IN')}
+                {recentSales.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="py-8 text-center text-slate-400">
+                      <ShoppingBag className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+                      <p className="font-semibold text-slate-600 text-xs">No invoices yet</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Counter bills created will appear here</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  recentSales.map((sale) => (
+                    <tr key={sale._id} className="hover:bg-slate-50/70 transition">
+                      <td className="py-3 px-3 font-mono font-bold text-slate-900">
+                        {sale.invoiceNumber}
+                      </td>
+                      <td className="py-3 px-3">
+                        <p className="font-bold text-slate-800">{sale.customer?.name || 'Walk-in'}</p>
+                        <p className="text-[10px] text-slate-400">{sale.customer?.phone || '-'}</p>
+                      </td>
+                      <td className="py-3 px-3 text-slate-600">
+                        {sale.items?.length || 1} items
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                          {sale.paymentMode}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right font-black text-slate-900">
+                        ₹{sale.grandTotal?.toLocaleString('en-IN')}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

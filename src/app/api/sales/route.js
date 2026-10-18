@@ -198,3 +198,20 @@ export async function POST(request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  try {
+    await connectDB();
+    const result = await Sale.deleteMany({});
+    console.log(`[MongoDB] Reset completed: Deleted ${result.deletedCount} sales`);
+    return NextResponse.json({
+      success: true,
+      message: `Deleted ${result.deletedCount} invoices. Dashboard & invoice numbering reset to 0001 for new billing.`,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error('Error resetting sales:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+

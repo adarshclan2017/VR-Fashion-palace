@@ -22,6 +22,7 @@ import {
   ExternalLink,
   TrendingUp,
   Receipt,
+  Trash2,
 } from 'lucide-react';
 
 export default function InvoicesPage() {
@@ -80,6 +81,27 @@ export default function InvoicesPage() {
       if (json.success) setSales(json.sales || []);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetAllSales = async () => {
+    if (!confirm('⚠️ Are you sure you want to delete ALL invoices and reset the dashboard to zero? This will reset invoice numbering back to 0001 for new billing and cannot be undone.')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/sales', { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        alert('✅ All invoices and dashboard metrics have been reset successfully! New bills will start from #0001.');
+        loadSales();
+      } else {
+        alert('Failed to reset: ' + json.error);
+      }
+    } catch (err) {
+      alert('Error resetting invoices: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -357,14 +379,26 @@ export default function InvoicesPage() {
           </p>
         </div>
 
-        <button
-          onClick={loadSales}
-          disabled={loading}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition self-start sm:self-auto"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={loadSales}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+
+          <button
+            onClick={handleResetAllSales}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold transition border border-red-200"
+            title="Reset all invoices and dashboard metrics"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-red-600" />
+            <span>Reset Invoices</span>
+          </button>
+        </div>
       </div>
 
       {/* ── Date Navigation Bar ── */}
