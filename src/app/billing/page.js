@@ -30,6 +30,8 @@ import {
   ExternalLink,
   Download,
   Share2,
+  ChevronLeft,
+  Layers,
 } from 'lucide-react';
 
 
@@ -77,20 +79,9 @@ export default function BillingPage() {
     return () => window.removeEventListener('afterprint', handleAfterPrint);
   }, []);
 
-  // Mobile drawer state
-  const [mobileCartOpen, setMobileCartOpen] = useState(false);
+  // Mobile navigation tab: 'catalog' | 'cart'
+  const [mobileTab, setMobileTab] = useState('catalog');
 
-  // Prevent background scroll when mobile cart is open
-  useEffect(() => {
-    if (mobileCartOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileCartOpen]);
 
   // Fetch available products
   const fetchProducts = async () => {
@@ -317,7 +308,7 @@ export default function BillingPage() {
         setPrintCompleted(false);
         setSmsStatus(null);
         setShowInvoiceModal(true);
-        setMobileCartOpen(false);
+        setMobileTab('catalog');
 
         // Reset cart
         setBillItems([]);
@@ -590,10 +581,48 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {/* Mobile Segmented Navigation Tabs (Catalog vs Current Bill Cart) */}
+      <div className="lg:hidden grid grid-cols-2 gap-2 bg-slate-200/80 p-1 rounded-2xl border border-slate-200 shadow-sm">
+        <button
+          type="button"
+          onClick={() => setMobileTab('catalog')}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition active:scale-95 ${
+            mobileTab === 'catalog'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <Layers className="w-4 h-4 text-rose-600" />
+          <span>Outfits ({products.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileTab('cart')}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold text-xs transition active:scale-95 ${
+            mobileTab === 'cart'
+              ? 'bg-rose-600 text-white shadow-md shadow-rose-600/30'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4" />
+          <span>Current Cart ({billSummary.itemCount})</span>
+          {billSummary.grandTotal > 0 && (
+            <span
+              className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                mobileTab === 'cart' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-700'
+              }`}
+            >
+              ₹{billSummary.grandTotal.toLocaleString('en-IN')}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Main Grid: Left Catalog + Right Cart */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Side: Product Catalog (Cols 7 on Desktop) */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className={`${mobileTab === 'catalog' ? 'block' : 'hidden'} lg:block lg:col-span-7 space-y-4 pb-24 lg:pb-0`}>
           {/* Search & Quick Filter Controls */}
           <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-rose-100 shadow-sm space-y-3">
             {/* Search Input */}
@@ -796,71 +825,110 @@ export default function BillingPage() {
                       </button>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Right Side: Current Bill / Checkout Cart (Cols 5 on Desktop) */}
-        <div className="hidden lg:block lg:col-span-5 sticky top-24 space-y-4">
+                      {/* Right Side: Current Bill / Checkout Cart (Cols 5 on Desktop, Full Width on Mobile Cart Tab) */}
+        <div className={`${mobileTab === 'cart' ? 'block' : 'hidden'} lg:block lg:col-span-5 sticky top-20 space-y-4`}>
           <div className="bg-white rounded-2xl border border-rose-200/80 shadow-xl overflow-hidden flex flex-col">
             {/* Cart Header */}
-            <div className="p-4 bg-gradient-to-r from-purple-950 to-rose-950 text-white flex items-center justify-between">
+            <div className="p-3.5 sm:p-4 bg-gradient-to-r from-purple-950 via-rose-900 to-purple-950 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-rose-400" />
-                <h2 className="font-heading font-black text-base">Current Bill Cart</h2>
+                <h2 className="font-heading font-black text-sm sm:text-base">Current Bill Cart</h2>
               </div>
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/20 text-rose-100">
-                {billSummary.itemCount} items
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/20 text-rose-100">
+                  {billSummary.itemCount} items
+                </span>
+                {billItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('Clear all outfits from the current bill?')) {
+                        setBillItems([]);
+                      }
+                    }}
+                    className="text-[11px] font-bold text-rose-300 hover:text-white px-2 py-0.5 rounded hover:bg-white/10 transition"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile Back Banner (shown only on mobile when on Cart tab) */}
+            <div className="lg:hidden px-3.5 py-2.5 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setMobileTab('catalog')}
+                className="flex items-center gap-1 text-xs font-bold text-rose-700 hover:text-rose-900 active:scale-95 transition"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>← Back to Browse Outfits</span>
+              </button>
+              <span className="text-[11px] font-semibold text-slate-500">
+                {billItems.length} outfit {billItems.length === 1 ? 'variety' : 'varieties'}
               </span>
             </div>
 
             {/* Cart Items List */}
-            <div className="p-4 max-h-[380px] overflow-y-auto divide-y divide-slate-100 space-y-3">
+            <div className="p-3.5 sm:p-4 max-h-[360px] lg:max-h-[380px] overflow-y-auto divide-y divide-slate-100 space-y-3">
               {billItems.length === 0 ? (
-                <div className="py-12 text-center text-slate-400">
-                  <ShoppingBag className="w-10 h-10 mx-auto text-slate-200 mb-2" />
-                  <p className="text-sm font-semibold text-slate-500">Cart is empty</p>
-                  <p className="text-xs text-slate-400 mt-0.5">Click &ldquo;Add&rdquo; on any dress or kids outfit</p>
+                <div className="py-10 text-center text-slate-400">
+                  <ShoppingBag className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                  <p className="text-sm font-bold text-slate-700">Your bill cart is empty</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-[240px] mx-auto">
+                    Click &ldquo;Add&rdquo; on any dress or kids outfit from the catalog.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setMobileTab('catalog')}
+                    className="lg:hidden mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Browse Outfits</span>
+                  </button>
                 </div>
               ) : (
                 billItems.map((item, idx) => (
-                  <div key={item.product + idx} className="pt-3 first:pt-0 flex items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
-                      <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
-                        <span className="font-semibold text-rose-600">{item.size}</span>
+                  <div key={item.product + idx} className="pt-3 first:pt-0 flex items-center justify-between gap-2 sm:gap-3">
+                    <div className="flex-1 min-w-0 pr-1">
+                      <p className="text-xs sm:text-sm font-bold text-slate-900 truncate">{item.name}</p>
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-0.5">
+                        <span className="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded">{item.size || 'Free'}</span>
                         <span>&bull;</span>
                         <span>₹{item.rate} each</span>
                       </div>
                     </div>
 
-                    {/* Quantity controls */}
-                    <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+                    {/* Touch-Friendly Quantity controls */}
+                    <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1 shrink-0">
                       <button
+                        type="button"
                         onClick={() => updateQuantity(idx, -1)}
-                        className="w-6 h-6 flex items-center justify-center rounded bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                        className="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center rounded-lg bg-white shadow-sm hover:bg-slate-200 text-slate-700 text-sm sm:text-xs font-black transition active:scale-90"
+                        aria-label="Decrease quantity"
                       >
                         -
                       </button>
-                      <span className="w-6 text-center text-xs font-black text-slate-800">{item.quantity}</span>
+                      <span className="w-6 sm:w-5 text-center text-xs font-black text-slate-800">{item.quantity}</span>
                       <button
+                        type="button"
                         onClick={() => updateQuantity(idx, 1)}
-                        className="w-6 h-6 flex items-center justify-center rounded bg-white hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                        className="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center rounded-lg bg-white shadow-sm hover:bg-slate-200 text-slate-700 text-sm sm:text-xs font-black transition active:scale-90"
+                        aria-label="Increase quantity"
                       >
                         +
                       </button>
                     </div>
 
                     {/* Price and remove */}
-                    <div className="text-right shrink-0">
-                      <p className="text-xs font-black text-slate-900">
+                    <div className="text-right shrink-0 min-w-[65px]">
+                      <p className="text-xs sm:text-sm font-black text-slate-900">
                         ₹{Math.round(item.total).toLocaleString('en-IN')}
                       </p>
                       <button
+                        type="button"
                         onClick={() => removeFromCart(idx)}
-                        className="text-[11px] text-red-500 hover:text-red-700 mt-0.5 font-semibold"
+                        className="text-[11px] text-red-500 hover:text-red-700 mt-0.5 font-bold"
                       >
                         Remove
                       </button>
@@ -871,8 +939,8 @@ export default function BillingPage() {
             </div>
 
             {/* Customer Details Form */}
-            <div className="p-4 bg-slate-50/70 border-t border-slate-200 space-y-3">
-              <div className="grid grid-cols-2 gap-2">
+            <div className="p-3.5 sm:p-4 bg-slate-50/70 border-t border-slate-200 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                     Customer Name
@@ -881,20 +949,20 @@ export default function BillingPage() {
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. Pooja, Priya"
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:outline-none"
+                    placeholder="e.g. Pooja, Walk-in"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm sm:text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:outline-none bg-white"
                   />
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
-                    Phone (WhatsApp)
+                    Phone (WhatsApp Bill)
                   </label>
                   <input
                     type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="10-digit number"
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:outline-none"
+                    placeholder="10-digit mobile"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm sm:text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:outline-none bg-white"
                   />
                 </div>
               </div>
@@ -915,43 +983,62 @@ export default function BillingPage() {
                       key={mode.id}
                       type="button"
                       onClick={() => setPaymentMode(mode.id)}
-                      className={`p-1.5 rounded-xl text-[11px] font-bold transition flex flex-col items-center gap-0.5 ${
+                      className={`p-2 sm:p-1.5 rounded-xl text-[11px] font-bold transition flex flex-col items-center gap-0.5 active:scale-95 ${
                         paymentMode === mode.id
-                          ? 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-600/30'
+                          ? 'bg-rose-600 text-white shadow-md ring-2 ring-rose-600/30'
                           : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
-                      <span className="text-xs">{mode.icon}</span>
-                      <span>{mode.label}</span>
+                      <span className="text-xs sm:text-sm">{mode.icon}</span>
+                      <span className="truncate w-full">{mode.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Discount Input */}
-              <div className="flex items-center justify-between text-xs pt-1">
-                <span className="font-semibold text-slate-600">Bill Discount:</span>
-                <div className="flex items-center gap-1 w-24">
-                  <input
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={billDiscountPercent}
-                    onChange={(e) => setBillDiscountPercent(e.target.value)}
-                    className="w-full px-2 py-1 rounded border border-slate-300 text-xs text-right font-bold"
-                  />
-                  <span className="text-xs font-bold text-slate-500">%</span>
+              {/* Discount Section with Quick Buttons */}
+              <div className="pt-1 space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-slate-700">Bill Discount:</span>
+                  <div className="flex items-center gap-1.5 w-28">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={billDiscountPercent}
+                      onChange={(e) => setBillDiscountPercent(e.target.value)}
+                      className="w-full px-2 py-1 rounded-lg border border-slate-300 text-xs text-right font-bold bg-white"
+                    />
+                    <span className="text-xs font-bold text-slate-500">%</span>
+                  </div>
+                </div>
+                {/* Quick % chips */}
+                <div className="flex items-center gap-1.5 justify-end">
+                  {['0', '5', '10', '15', '20'].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => setBillDiscountPercent(pct)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold transition ${
+                        billDiscountPercent === pct
+                          ? 'bg-rose-600 text-white'
+                          : 'bg-slate-200/80 text-slate-600 hover:bg-slate-300'
+                      }`}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* Summary Breakdown */}
               <div className="space-y-1.5 pt-2 border-t border-slate-200 text-xs">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal:</span>
-                  <span className="font-semibold">₹{billSummary.subtotal.toLocaleString('en-IN')}</span>
+                <div className="flex justify-between text-slate-600 font-medium">
+                  <span>Subtotal ({billSummary.itemCount} items):</span>
+                  <span className="font-semibold text-slate-800">₹{billSummary.subtotal.toLocaleString('en-IN')}</span>
                 </div>
                 {parseFloat(billDiscountPercent) > 0 && (
-                  <div className="flex justify-between text-rose-600 font-semibold">
+                  <div className="flex justify-between text-rose-600 font-bold">
                     <span>Discount ({billDiscountPercent}%):</span>
                     <span>-₹{Math.round((billSummary.subtotal * parseFloat(billDiscountPercent)) / 100).toLocaleString('en-IN')}</span>
                   </div>
@@ -962,9 +1049,9 @@ export default function BillingPage() {
                     <span>₹{billSummary.totalSavings.toLocaleString('en-IN')}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-base font-black text-slate-900 pt-1.5 border-t border-slate-300">
+                <div className="flex justify-between items-baseline text-base font-black text-slate-900 pt-1.5 border-t border-slate-300">
                   <span>Grand Total:</span>
-                  <span className="text-rose-600 text-lg">
+                  <span className="text-rose-600 text-xl font-heading">
                     ₹{billSummary.grandTotal.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -974,7 +1061,7 @@ export default function BillingPage() {
               <button
                 onClick={handleCheckout}
                 disabled={submitting || billItems.length === 0}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-900 via-rose-600 to-pink-600 hover:from-purple-800 hover:to-pink-500 text-white font-extrabold text-sm shadow-lg shadow-rose-600/30 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3.5 sm:py-3 rounded-xl bg-gradient-to-r from-purple-900 via-rose-600 to-pink-600 hover:from-purple-800 hover:to-pink-500 text-white font-extrabold text-sm sm:text-xs shadow-lg shadow-rose-600/30 transition active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -990,148 +1077,37 @@ export default function BillingPage() {
         </div>
       </div>
 
-      {/* Mobile Floating Cart Trigger Bar (Sticky Bottom on Phones) */}
-      <div className="lg:hidden fixed bottom-4 left-3 right-3 z-30">
-        <button
-          onClick={() => setMobileCartOpen(true)}
-          className="w-full bg-gradient-to-r from-purple-950 via-rose-700 to-purple-950 text-white p-3.5 rounded-2xl shadow-2xl flex items-center justify-between border border-rose-500/30 active:scale-98 transition"
-        >
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-rose-500 flex items-center justify-center font-bold text-xs shadow-md">
-              {billSummary.itemCount}
-            </div>
-            <div className="text-left">
-              <p className="text-xs font-bold leading-tight">View Cart / Bill</p>
-              <p className="text-[10px] text-rose-200">{billItems.length} outfit varieties</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-black text-amber-300">
-              ₹{billSummary.grandTotal.toLocaleString('en-IN')}
-            </span>
-            <ChevronRight className="w-4 h-4 text-rose-200" />
-          </div>
-        </button>
-      </div>
-
-      {/* Mobile Cart Bottom Sheet Modal */}
-      {mobileCartOpen && (
-        <div
-          className="lg:hidden fixed inset-0 !m-0 !p-0 w-screen h-screen min-h-[100dvh] z-[70] bg-slate-950/70 backdrop-blur-md flex flex-col justify-end"
-          onClick={() => setMobileCartOpen(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto p-4 space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-200"
+      {/* Mobile Floating Cart Trigger Bar (Sticky Bottom on Phones when browsing Outfits) */}
+      {mobileTab === 'catalog' && billItems.length > 0 && (
+        <div className="lg:hidden fixed bottom-4 left-3 right-3 z-30 animate-in slide-in-from-bottom duration-200">
+          <button
+            type="button"
+            onClick={() => {
+              setMobileTab('cart');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="w-full bg-gradient-to-r from-purple-950 via-rose-700 to-purple-950 text-white p-3.5 rounded-2xl shadow-2xl flex items-center justify-between border border-rose-500/30 active:scale-98 transition"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-rose-600" />
-                <h3 className="font-heading font-black text-slate-900 text-lg">
-                  Current Bill Cart ({billSummary.itemCount} items)
-                </h3>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-rose-500 flex items-center justify-center font-black text-xs shadow-md">
+                {billSummary.itemCount}
               </div>
-              <button
-                onClick={() => setMobileCartOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Items List */}
-            <div className="space-y-2.5 max-h-[220px] overflow-y-auto">
-              {billItems.length === 0 ? (
-                <p className="text-center text-xs text-slate-400 py-6">No items in bill cart</p>
-              ) : (
-                billItems.map((item, idx) => (
-                  <div key={item.product + idx} className="p-3 bg-slate-50 rounded-xl flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-900 truncate">{item.name}</p>
-                      <p className="text-[10px] text-slate-500">Size: {item.size} &bull; ₹{item.rate}</p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => updateQuantity(idx, -1)}
-                        className="w-6 h-6 rounded bg-white shadow-sm flex items-center justify-center font-bold text-xs"
-                      >
-                        -
-                      </button>
-                      <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(idx, 1)}
-                        className="w-6 h-6 rounded bg-white shadow-sm flex items-center justify-center font-bold text-xs"
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <div className="text-right">
-                      <p className="text-xs font-black text-slate-900">₹{Math.round(item.total)}</p>
-                      <button onClick={() => removeFromCart(idx)} className="text-[10px] text-red-500">
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Customer Inputs on Mobile */}
-            <div className="space-y-2 pt-2 border-t border-slate-100">
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Customer Name"
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium"
-              />
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="Customer Phone (for WhatsApp receipt)"
-                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium"
-              />
-
-              {/* Payment Mode Pills */}
-              <div className="grid grid-cols-4 gap-1.5 pt-1">
-                {['UPI', 'Cash', 'Card', 'Credit/Due'].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setPaymentMode(m)}
-                    className={`py-1.5 rounded-lg text-[11px] font-bold ${
-                      paymentMode === m ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
+              <div className="text-left">
+                <p className="text-xs font-bold leading-tight">Current Bill Cart ({billSummary.itemCount} items)</p>
+                <p className="text-[10px] text-rose-200">{billItems.length} outfit varieties added</p>
               </div>
             </div>
 
-            {/* Total and Checkout */}
-            <div className="pt-2 border-t border-slate-200">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-xs font-bold text-slate-600">Total Payable:</span>
-                <span className="text-lg font-black text-rose-600">
-                  ₹{billSummary.grandTotal.toLocaleString('en-IN')}
-                </span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-amber-300">
+                ₹{billSummary.grandTotal.toLocaleString('en-IN')}
+              </span>
+              <div className="flex items-center text-xs font-bold bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-xl">
+                <span>View Cart</span>
+                <ChevronRight className="w-4 h-4 ml-0.5" />
               </div>
-
-              <button
-                onClick={handleCheckout}
-                disabled={submitting || billItems.length === 0}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold text-sm shadow-lg shadow-rose-600/30 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Complete Sale (₹{billSummary.grandTotal.toLocaleString('en-IN')})</span>
-              </button>
             </div>
-          </div>
+          </button>
         </div>
       )}
 
