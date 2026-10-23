@@ -12,6 +12,7 @@ import {
   Check,
   X,
   ChevronDown,
+  ChevronRight,
   DollarSign,
   Sparkles,
   ShoppingBag,
@@ -19,7 +20,9 @@ import {
   CheckCircle2,
   Filter,
   ArrowUpDown,
-  Loader2
+  Loader2,
+  Grid3X3,
+  Tag
 } from 'lucide-react';
 
 
@@ -29,15 +32,6 @@ const SECTION_SIZES = {
   '__infants__':    ['0-3M', '3-6M', '6-9M', '9-12M', '12-18M', '18-24M'],
   '__default__':    ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'],
 };
-
-const COLORS = [
-  'White', 'Off White', 'Cream', 'Beige', 'Black', 'Grey', 'Charcoal',
-  'Red', 'Maroon', 'Wine', 'Rust', 'Coral', 'Peach', 'Orange',
-  'Yellow', 'Mustard', 'Gold', 'Green', 'Mint', 'Olive', 'Teal',
-  'Blue', 'Navy', 'Sky Blue', 'Royal Blue', 'Purple', 'Violet', 'Lavender',
-  'Pink', 'Rose', 'Hot Pink', 'Magenta', 'Fuchsia',
-  'Brown', 'Chocolate', 'Tan', 'Silver', 'Multi-color', 'Printed', 'Others',
-];
 
 const LS_SECTIONS = 'vr_palace_sections';
 const LS_CATEGORIES = 'vr_palace_categories';
@@ -68,19 +62,16 @@ export default function InventoryPage() {
   // New Outfit Form State
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
-    section: 'Women',
-    category: 'Sarees',
-    size: 'M',
-    color: 'White',
-    fabric: 'Cotton',
-    brand: 'VR Collection',
+    section: '',
+    category: '',
+    size: '',
+    fabric: '',
+    brand: '',
     mrp: '',
     costPrice: '',
     sellingPrice: '',
-    currentStock: '15',
-    minStockAlert: '5',
-    barcode: '',
+    currentStock: '',
+    minStockAlert: '',
   });
 
   const [saving, setSaving] = useState(false);
@@ -190,6 +181,18 @@ export default function InventoryPage() {
 
 
 
+  // Size & price filter states
+  const [filterSize, setFilterSize] = useState('');
+  const [filterMinPrice, setFilterMinPrice] = useState('');
+  const [filterMaxPrice, setFilterMaxPrice] = useState('');
+
+  // Derive all unique sizes from products for the filter dropdown
+  const allSizes = useMemo(() => {
+    const sizeSet = new Set();
+    products.forEach((p) => { if (p.size) sizeSet.add(p.size); });
+    return Array.from(sizeSet).sort();
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
       const matchSection = selectedSection === 'All' || p.section === selectedSection;
@@ -201,13 +204,22 @@ export default function InventoryPage() {
         p.name.toLowerCase().includes(q) ||
         p.code.toLowerCase().includes(q) ||
         (p.size && p.size.toLowerCase().includes(q)) ||
-        (p.color && p.color.toLowerCase().includes(q)) ||
         (p.fabric && p.fabric.toLowerCase().includes(q)) ||
         (p.brand && p.brand.toLowerCase().includes(q));
 
-      return matchSection && matchLowStock && matchSearch;
+      // Size filter
+      const matchSize = !filterSize || p.size === filterSize;
+
+      // Price filter
+      const price = p.sellingPrice || 0;
+      const minP = parseFloat(filterMinPrice);
+      const maxP = parseFloat(filterMaxPrice);
+      const matchMinPrice = isNaN(minP) || price >= minP;
+      const matchMaxPrice = isNaN(maxP) || price <= maxP;
+
+      return matchSection && matchLowStock && matchSearch && matchSize && matchMinPrice && matchMaxPrice;
     });
-  }, [products, selectedSection, showLowStockOnly, search]);
+  }, [products, selectedSection, showLowStockOnly, search, filterSize, filterMinPrice, filterMaxPrice]);
 
   // Handle Quick Stock Adjust (+1 / -1)
   const handleQuickAdjust = async (product, delta) => {
@@ -288,9 +300,9 @@ export default function InventoryPage() {
       }
     }
 
-    // Auto-generate SKU if not set
+    // Auto-generate SKU always (no manual code entry)
     const sectionPrefix = (sec.replace(/[^a-zA-Z]/g, '').slice(0, 3) || 'VR').toUpperCase();
-    const code = (formData.code?.trim() || `${sectionPrefix}-${Date.now().toString().slice(-6)}`).toUpperCase();
+    const code = editingProduct?.code || `${sectionPrefix}-${Date.now().toString().slice(-6)}`;
 
     const payload = {
       ...formData,
@@ -341,19 +353,16 @@ export default function InventoryPage() {
     setEditingProduct(p);
     setFormData({
       name: p.name,
-      code: p.code,
-      section: p.section || 'Women',
-      category: p.category || 'General',
-      size: p.size || 'Free Size',
-      color: p.color || '',
-      fabric: p.fabric || 'Cotton',
-      brand: p.brand || 'VR Collection',
+      section: p.section || '',
+      category: p.category || '',
+      size: p.size || '',
+      fabric: p.fabric || '',
+      brand: p.brand || '',
       mrp: p.mrp || p.sellingPrice || '',
       costPrice: p.costPrice || '',
       sellingPrice: p.sellingPrice || '',
       currentStock: p.currentStock || 0,
       minStockAlert: p.minStockAlert || 5,
-      barcode: p.barcode || '',
     });
     if (p.section && !sections.includes(p.section)) {
       const updated = [...sections, p.section];
@@ -400,24 +409,19 @@ export default function InventoryPage() {
 
         <button
           onClick={() => {
-            const defaultSec = sections[0] || 'Women';
-            const defaultCat = (categoriesMap[defaultSec] && categoriesMap[defaultSec][0]) || '';
             setEditingProduct(null);
             setFormData({
               name: '',
-              code: '',
-              section: defaultSec,
-              category: defaultCat,
-              size: getSizesForSection(defaultSec)[0] || 'Free Size',
-              color: 'White',
-              fabric: 'Cotton',
-              brand: 'VR Collection',
+              section: '',
+              category: '',
+              size: '',
+              fabric: '',
+              brand: '',
               mrp: '',
               costPrice: '',
               sellingPrice: '',
-              currentStock: '15',
-              minStockAlert: '5',
-              barcode: '',
+              currentStock: '',
+              minStockAlert: '',
             });
             setErrorMsg('');
             setShowAddModal(true);
@@ -464,6 +468,56 @@ export default function InventoryPage() {
             <AlertTriangle className="w-3.5 h-3.5" />
             <span>Low Stock Alerts Only</span>
           </button>
+        </div>
+
+        {/* Size & Price Filters */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-[11px] font-bold text-slate-500 uppercase">Filters:</span>
+          </div>
+          {/* Size filter */}
+          <select
+            value={filterSize}
+            onChange={(e) => setFilterSize(e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-rose-500 bg-slate-50"
+          >
+            <option value="">All Sizes</option>
+            {allSizes.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          {/* Min price */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-bold text-slate-400">₹ Min</span>
+            <input
+              type="number"
+              value={filterMinPrice}
+              onChange={(e) => setFilterMinPrice(e.target.value)}
+              placeholder="0"
+              className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-rose-500 bg-slate-50"
+            />
+          </div>
+          {/* Max price */}
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-bold text-slate-400">₹ Max</span>
+            <input
+              type="number"
+              value={filterMaxPrice}
+              onChange={(e) => setFilterMaxPrice(e.target.value)}
+              placeholder="Any"
+              className="w-20 px-2 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 focus:ring-1 focus:ring-rose-500 bg-slate-50"
+            />
+          </div>
+          {/* Clear filters */}
+          {(filterSize || filterMinPrice || filterMaxPrice) && (
+            <button
+              onClick={() => { setFilterSize(''); setFilterMinPrice(''); setFilterMaxPrice(''); }}
+              className="px-2 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold hover:bg-red-100 transition"
+            >
+              ✕ Clear
+            </button>
+          )}
         </div>
 
         {/* Section Filter Pills - built from user's dynamic sections + catalog */}
@@ -766,170 +820,219 @@ export default function InventoryPage() {
         </div>
       )}
 
-      {/* Add / Edit Outfit Modal */}
+      {/* Add / Edit Outfit — Inline Grid Section (replaces overlay modal) */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-200 my-6 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <h2 className="font-heading font-black text-lg text-slate-900">
-                  {editingProduct ? 'Edit Fashion Outfit' : 'Add New Fashion Outfit'}
-                </h2>
+        <div className="bg-white rounded-2xl border-2 border-rose-200 shadow-lg overflow-hidden animate-in slide-in-from-top duration-200">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-rose-600 to-pink-600 px-5 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-white">
+              <Grid3X3 className="w-5 h-5" />
+              <h2 className="font-heading font-black text-base sm:text-lg">
+                {editingProduct ? 'Edit Fashion Outfit' : 'Add New Fashion Outfit'}
+              </h2>
+            </div>
+            <button
+              onClick={() => setShowAddModal(false)}
+              className="text-white/70 hover:text-white font-bold text-lg transition"
+            >
+              ✕
+            </button>
+          </div>
+
+          {errorMsg && (
+            <div className="mx-5 mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+              {errorMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleSaveProduct} className="p-5 space-y-4">
+            {/* ── Section + Category as Grid tiles ─── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* STORE SECTION (Collection) — Grid of tiles */}
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase mb-2">
+                  <Layers className="w-3.5 h-3.5 text-rose-500" />
+                  Store Section (Collection)
+                </label>
+
+                {sections.length === 0 && !addingSection ? (
+                  <div className="p-4 rounded-xl border-2 border-dashed border-slate-300 text-center">
+                    <p className="text-xs text-slate-400 mb-2">No sections yet. Add your first collection.</p>
+                    <button type="button" onClick={() => setAddingSection(true)}
+                      className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold">
+                      + Add Collection
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {Array.from(new Set([...sections, ...(formData.section ? [formData.section] : [])])).map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => {
+                            const cats = categoriesMap[s] || [];
+                            setFormData({ ...formData, section: s, category: cats[0] || '', size: getSizesForSection(s)[0] || '' });
+                          }}
+                          className={`relative px-3 py-2.5 rounded-xl text-xs font-bold transition text-left border ${
+                            formData.section === s
+                              ? 'bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20 ring-2 ring-rose-300'
+                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-rose-50 hover:border-rose-300 hover:text-rose-700'
+                          }`}
+                        >
+                          <span className="block truncate">{s}</span>
+                          {(categoriesMap[s] || []).length > 0 && (
+                            <span className={`text-[9px] font-semibold mt-0.5 block ${
+                              formData.section === s ? 'text-rose-200' : 'text-slate-400'
+                            }`}>
+                              {(categoriesMap[s] || []).length} categories
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                      {/* Add new section tile */}
+                      <button
+                        type="button"
+                        onClick={() => { setAddingSection(true); setNewSectionText(''); }}
+                        className="px-3 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-rose-300 text-rose-600 hover:bg-rose-50 transition flex items-center justify-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add New
+                      </button>
+                    </div>
+
+                    {/* Delete selected section */}
+                    {formData.section && sections.includes(formData.section) && (
+                      <button type="button" onClick={() => handleDeleteSection(formData.section)}
+                        className="text-[10px] font-bold text-red-500 hover:text-red-700 transition">
+                        🗑 Remove "{formData.section}" section
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {addingSection && (
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={newSectionText}
+                      onChange={(e) => setNewSectionText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSection(); } if (e.key === 'Escape') { setAddingSection(false); setNewSectionText(''); } }}
+                      placeholder="e.g. Women Wear, Kids, Ethnic..."
+                      className="flex-1 px-3 py-2 rounded-xl border border-rose-400 text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:outline-none"
+                    />
+                    <button type="button" onClick={handleAddSection}
+                      className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700">
+                      Save
+                    </button>
+                    <button type="button" onClick={() => { setAddingSection(false); setNewSectionText(''); }}
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200">
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold"
-              >
-                ✕
-              </button>
+
+              {/* CATEGORY — Grid of tiles showing ALL category names */}
+              <div>
+                <label className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 uppercase mb-2">
+                  <Tag className="w-3.5 h-3.5 text-purple-500" />
+                  Category
+                  <span className="text-[9px] text-slate-400 font-normal lowercase ml-1">(Optional)</span>
+                </label>
+
+                {!formData.section ? (
+                  <div className="p-4 rounded-xl border-2 border-dashed border-slate-200 text-center">
+                    <p className="text-xs text-slate-400">← Select a collection first to see categories</p>
+                  </div>
+                ) : (categoriesMap[formData.section] || []).length === 0 && !addingCategory ? (
+                  <div className="p-4 rounded-xl border-2 border-dashed border-purple-200 text-center">
+                    <p className="text-xs text-slate-400 mb-2">
+                      No categories in "{formData.section}" yet.
+                    </p>
+                    <button type="button" onClick={() => setAddingCategory(true)}
+                      className="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-bold">
+                      + Add Category
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {/* "General" option */}
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, category: '' })}
+                        className={`px-3 py-2.5 rounded-xl text-xs font-bold transition border ${
+                          !formData.category
+                            ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20 ring-2 ring-purple-300'
+                            : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700'
+                        }`}
+                      >
+                        General
+                      </button>
+                      {/* All category tiles */}
+                      {Array.from(new Set([...(categoriesMap[formData.section] || []), ...(formData.category ? [formData.category] : [])])).filter(Boolean).map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, category: cat })}
+                          className={`px-3 py-2.5 rounded-xl text-xs font-bold transition border truncate ${
+                            formData.category === cat
+                              ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-600/20 ring-2 ring-purple-300'
+                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                      {/* Add new category tile */}
+                      <button
+                        type="button"
+                        onClick={() => { setAddingCategory(true); setNewCategoryText(''); }}
+                        className="px-3 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-purple-300 text-purple-600 hover:bg-purple-50 transition flex items-center justify-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add New
+                      </button>
+                    </div>
+
+                    {/* Delete selected category */}
+                    {formData.category && (categoriesMap[formData.section] || []).includes(formData.category) && (
+                      <button type="button" onClick={() => handleDeleteCategory(formData.category)}
+                        className="text-[10px] font-bold text-red-500 hover:text-red-700 transition">
+                        🗑 Remove "{formData.category}" category
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {addingCategory && (
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={newCategoryText}
+                      onChange={(e) => setNewCategoryText(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCategory(); } if (e.key === 'Escape') { setAddingCategory(false); setNewCategoryText(''); } }}
+                      placeholder="e.g. Sarees, Kurtis, Frocks..."
+                      className="flex-1 px-3 py-2 rounded-xl border border-purple-400 text-xs font-medium focus:ring-1 focus:ring-purple-500 focus:outline-none"
+                    />
+                    <button type="button" onClick={handleAddCategory}
+                      className="px-3 py-1.5 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700">
+                      Save
+                    </button>
+                    <button type="button" onClick={() => { setAddingCategory(false); setNewCategoryText(''); }}
+                      className="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200">
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {errorMsg && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
-                {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleSaveProduct} className="space-y-3.5">
-              {/* Section + Category — fully dynamic */}
-              <div className="space-y-3">
-                {/* STORE SECTION */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Store Section (Collection)</label>
-
-                  {sections.length === 0 && !addingSection ? (
-                    <div className="p-3 rounded-xl border-2 border-dashed border-slate-300 text-center">
-                      <p className="text-xs text-slate-400 mb-2">No sections yet. Add your first collection.</p>
-                      <button type="button" onClick={() => setAddingSection(true)}
-                        className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold">
-                        + Add Collection
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <select
-                        value={formData.section}
-                        onChange={(e) => {
-                          const sec = e.target.value;
-                          const cats = categoriesMap[sec] || [];
-                          setFormData({ ...formData, section: sec, category: cats[0] || '', size: getSizesForSection(sec)[0] });
-                        }}
-                        className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-1 focus:ring-rose-500"
-                      >
-                        {Array.from(new Set([...sections, ...(formData.section ? [formData.section] : [])])).map((s) => (
-                          <option key={s} value={s}>{s}</option>
-                        ))}
-                      </select>
-                      <button type="button" onClick={() => { setAddingSection(true); setNewSectionText(''); }}
-                        className="px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold hover:bg-rose-100 transition shrink-0"
-                        title="Add new collection">
-                        + Add
-                      </button>
-                      {formData.section && sections.includes(formData.section) && (
-                        <button type="button" onClick={() => handleDeleteSection(formData.section)}
-                          className="px-2.5 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-100 transition shrink-0"
-                          title="Delete this section from list">
-                          🗑 Del
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {addingSection && (
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        autoFocus
-                        type="text"
-                        value={newSectionText}
-                        onChange={(e) => setNewSectionText(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddSection(); } if (e.key === 'Escape') { setAddingSection(false); setNewSectionText(''); } }}
-                        placeholder="e.g. Women Wear, Kids, Ethnic..."
-                        className="flex-1 px-3 py-2 rounded-xl border border-rose-400 text-xs font-medium focus:ring-1 focus:ring-rose-500 focus:outline-none"
-                      />
-                      <button type="button" onClick={handleAddSection}
-                        className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700">
-                        Save
-                      </button>
-                      <button type="button" onClick={() => { setAddingSection(false); setNewSectionText(''); }}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200">
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* CATEGORY */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase">Category</label>
-                    <span className="text-[10px] text-slate-400">(Optional)</span>
-                  </div>
-
-                  {(categoriesMap[formData.section] || []).length === 0 && !formData.category && !addingCategory ? (
-                    <div className="p-3 rounded-xl border-2 border-dashed border-slate-300 text-center">
-                      <p className="text-xs text-slate-400 mb-2">
-                        {formData.section ? `No categories in "${formData.section}" yet (optional).` : 'Select a collection first.'}
-                      </p>
-                      {formData.section && (
-                        <button type="button" onClick={() => setAddingCategory(true)}
-                          className="px-3 py-1.5 rounded-lg bg-purple-600 text-white text-xs font-bold">
-                          + Add Category
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex gap-2">
-                      <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-1 focus:ring-rose-500"
-                      >
-                        <option value="">General (No category)</option>
-                        {Array.from(new Set([...(categoriesMap[formData.section] || []), ...(formData.category ? [formData.category] : [])])).map((cat) => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                      <button type="button" onClick={() => { setAddingCategory(true); setNewCategoryText(''); }}
-                        className="px-2.5 py-1.5 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs font-bold hover:bg-purple-100 transition shrink-0"
-                        title="Add new category">
-                        + Add
-                      </button>
-                      {formData.category && (categoriesMap[formData.section] || []).includes(formData.category) && (
-                        <button type="button" onClick={() => handleDeleteCategory(formData.category)}
-                          className="px-2.5 py-1.5 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold hover:bg-red-100 transition shrink-0"
-                          title="Delete this category from list">
-                          🗑 Del
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  {addingCategory && (
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        autoFocus
-                        type="text"
-                        value={newCategoryText}
-                        onChange={(e) => setNewCategoryText(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddCategory(); } if (e.key === 'Escape') { setAddingCategory(false); setNewCategoryText(''); } }}
-                        placeholder="e.g. Sarees, Kurtis, Frocks..."
-                        className="flex-1 px-3 py-2 rounded-xl border border-purple-400 text-xs font-medium focus:ring-1 focus:ring-purple-500 focus:outline-none"
-                      />
-                      <button type="button" onClick={handleAddCategory}
-                        className="px-3 py-1.5 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700">
-                        Save
-                      </button>
-                      <button type="button" onClick={() => { setAddingCategory(false); setNewCategoryText(''); }}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200">
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
+            {/* ── Product Details Grid ─── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-3 border-t border-slate-100">
               {/* Outfit Name */}
-              <div>
+              <div className="sm:col-span-2 lg:col-span-3">
                 <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Outfit Name *</label>
                 <input
                   type="text"
@@ -937,142 +1040,123 @@ export default function InventoryPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Banarasi Silk Saree, Girls Tutu Frock"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-1 focus:ring-rose-500"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium focus:ring-2 focus:ring-rose-500 focus:outline-none"
                 />
               </div>
 
-              {/* Size + Color dropdowns */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Size</label>
-                  <select
-                    value={formData.size}
-                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold focus:ring-1 focus:ring-rose-500"
-                  >
-                    {getSizesForSection(formData.section).map((s) => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Color</label>
-                  <select
-                    value={formData.color}
-                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium focus:ring-1 focus:ring-rose-500"
-                  >
-                    {COLORS.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Pricing + live profit preview */}
+              {/* Size */}
               <div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">MRP (₹)</label>
-                    <input
-                      type="number"
-                      value={formData.mrp}
-                      onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
-                      placeholder="1499"
-                      className="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs font-bold"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Selling Price *</label>
-                    <input
-                      type="number"
-                      required
-                      value={formData.sellingPrice}
-                      onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
-                      placeholder="999"
-                      className="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs font-bold text-rose-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Cost Price</label>
-                    <input
-                      type="number"
-                      value={formData.costPrice}
-                      onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                      placeholder="500"
-                      className="w-full px-2.5 py-2 rounded-xl border border-slate-300 text-xs font-medium"
-                    />
-                  </div>
-                </div>
-
-                {/* Live profit preview */}
-                {formData.sellingPrice && formData.costPrice && (
-                  (() => {
-                    const profit = Number(formData.sellingPrice) - Number(formData.costPrice);
-                    const margin = formData.sellingPrice > 0 ? Math.round((profit / Number(formData.sellingPrice)) * 100) : 0;
-                    const isPositive = profit >= 0;
-                    return (
-                      <div className={`mt-2 px-3 py-2 rounded-xl flex items-center justify-between text-xs font-bold ${
-                        isPositive ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-700'
-                      }`}>
-                        <span>Profit per piece:</span>
-                        <span>{isPositive ? '+' : ''}₹{profit.toLocaleString('en-IN')} &nbsp;({margin}% margin)</span>
-                      </div>
-                    );
-                  })()
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                    Stock Pieces
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.currentStock}
-                    onChange={(e) => setFormData({ ...formData, currentStock: e.target.value })}
-                    placeholder="20"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">
-                    Min Stock Alert
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.minStockAlert}
-                    onChange={(e) => setFormData({ ...formData, minStockAlert: e.target.value })}
-                    placeholder="5"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Size</label>
+                <select
+                  value={formData.size}
+                  onChange={(e) => setFormData({ ...formData, size: e.target.value })}
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold focus:ring-1 focus:ring-rose-500"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold text-xs shadow-md shadow-rose-600/25 flex items-center gap-1.5"
-                >
-                  {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>{saving ? 'Saving...' : editingProduct ? 'Update Outfit' : 'Add Outfit'}</span>
-                </button>
+                  <option value="">Select size</option>
+                  {getSizesForSection(formData.section).map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
               </div>
-            </form>
-          </div>
+
+              {/* MRP */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">MRP (₹)</label>
+                <input
+                  type="number"
+                  value={formData.mrp}
+                  onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
+                  placeholder="1499"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold"
+                />
+              </div>
+
+              {/* Selling Price */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Selling Price * (₹)</label>
+                <input
+                  type="number"
+                  required
+                  value={formData.sellingPrice}
+                  onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })}
+                  placeholder="999"
+                  className="w-full px-3 py-2.5 rounded-xl border border-rose-300 text-xs font-bold text-rose-600 focus:ring-2 focus:ring-rose-500"
+                />
+              </div>
+
+              {/* Cost Price */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Cost Price (₹)</label>
+                <input
+                  type="number"
+                  value={formData.costPrice}
+                  onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
+                  placeholder="500"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium"
+                />
+              </div>
+
+              {/* Stock Pieces */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Stock Pieces</label>
+                <input
+                  type="number"
+                  value={formData.currentStock}
+                  onChange={(e) => setFormData({ ...formData, currentStock: e.target.value })}
+                  placeholder="0"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold"
+                />
+              </div>
+
+              {/* Min Stock Alert */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase mb-1">Min Stock Alert</label>
+                <input
+                  type="number"
+                  value={formData.minStockAlert}
+                  onChange={(e) => setFormData({ ...formData, minStockAlert: e.target.value })}
+                  placeholder="5"
+                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-medium"
+                />
+              </div>
+            </div>
+
+            {/* Live profit preview */}
+            {formData.sellingPrice && formData.costPrice && (
+              (() => {
+                const profit = Number(formData.sellingPrice) - Number(formData.costPrice);
+                const margin = formData.sellingPrice > 0 ? Math.round((profit / Number(formData.sellingPrice)) * 100) : 0;
+                const isPositive = profit >= 0;
+                return (
+                  <div className={`px-4 py-2.5 rounded-xl flex items-center justify-between text-xs font-bold ${
+                    isPositive ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-red-50 border border-red-200 text-red-700'
+                  }`}>
+                    <span>Profit per piece:</span>
+                    <span>{isPositive ? '+' : ''}₹{profit.toLocaleString('en-IN')} &nbsp;({margin}% margin)</span>
+                  </div>
+                );
+              })()
+            )}
+
+            {/* Action buttons */}
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-rose-600/25 flex items-center gap-2 transition active:scale-95"
+              >
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{saving ? 'Saving...' : editingProduct ? 'Update Outfit' : 'Add Outfit'}</span>
+              </button>
+            </div>
+          </form>
         </div>
       )}
 

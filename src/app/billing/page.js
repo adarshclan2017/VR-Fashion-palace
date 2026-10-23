@@ -32,6 +32,9 @@ import {
   Share2,
   ChevronLeft,
   Layers,
+  Sparkles,
+  Filter,
+  Tag,
 } from 'lucide-react';
 
 
@@ -118,16 +121,48 @@ export default function BillingPage() {
     return ['All', ...Array.from(list)];
   }, [products]);
 
-  // Categories list derived from products
+  // Categories list derived from products (and stored categories), filtered by section
   const categories = useMemo(() => {
     const list = new Set();
+    // From saved categoriesMap in localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const savedCats = JSON.parse(localStorage.getItem('vr_palace_categories'));
+        if (savedCats && typeof savedCats === 'object') {
+          if (selectedSection === 'All') {
+            Object.values(savedCats).forEach((cats) => {
+              if (Array.isArray(cats)) cats.forEach((c) => list.add(c));
+            });
+          } else if (savedCats[selectedSection]) {
+            savedCats[selectedSection].forEach((c) => list.add(c));
+          }
+        }
+      } catch {}
+    }
+    // From products
     products.forEach((p) => {
-      if (p.category) list.add(p.category);
+      if (p.category) {
+        if (selectedSection === 'All' || p.section === selectedSection) {
+          list.add(p.category);
+        }
+      }
     });
     return ['All', ...Array.from(list)];
+  }, [products, selectedSection]);
+
+  // Size & price filter states for billing catalog
+  const [filterSize, setFilterSize] = useState('');
+  const [filterMinPrice, setFilterMinPrice] = useState('');
+  const [filterMaxPrice, setFilterMaxPrice] = useState('');
+
+  // Derive all unique sizes from products
+  const allSizes = useMemo(() => {
+    const sizeSet = new Set();
+    products.forEach((p) => { if (p.size) sizeSet.add(p.size); });
+    return Array.from(sizeSet).sort();
   }, [products]);
 
-  // Filtered products list based on search
+  // Filtered products list based on search, section, category, size, and price
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
     const queryWords = q ? q.split(/\s+/).filter(Boolean) : [];
@@ -140,16 +175,33 @@ export default function BillingPage() {
 
       // If user typed a search query, show all matching items across all sections dynamically
       if (q) {
-        return matchSearch;
+        // Still apply size and price filters even during search
+        const matchSize = !filterSize || p.size === filterSize;
+        const price = p.sellingPrice || 0;
+        const minP = parseFloat(filterMinPrice);
+        const maxP = parseFloat(filterMaxPrice);
+        const matchMinPrice = isNaN(minP) || price >= minP;
+        const matchMaxPrice = isNaN(maxP) || price <= maxP;
+        return matchSearch && matchSize && matchMinPrice && matchMaxPrice;
       }
 
       // When no search query, filter by selected section and category
       const matchSection = selectedSection === 'All' || p.section === selectedSection;
       const matchCategory = selectedCategory === 'All' || p.category === selectedCategory;
 
-      return matchSection && matchCategory;
+      // Size filter
+      const matchSize = !filterSize || p.size === filterSize;
+
+      // Price filter
+      const price = p.sellingPrice || 0;
+      const minP = parseFloat(filterMinPrice);
+      const maxP = parseFloat(filterMaxPrice);
+      const matchMinPrice = isNaN(minP) || price >= minP;
+      const matchMaxPrice = isNaN(maxP) || price <= maxP;
+
+      return matchSection && matchCategory && matchSize && matchMinPrice && matchMaxPrice;
     });
-  }, [products, selectedSection, selectedCategory, search]);
+  }, [products, selectedSection, selectedCategory, search, filterSize, filterMinPrice, filterMaxPrice]);
 
   // Pressing Enter in search bar with 1 match adds directly to bill
   const handleSearchKeyDown = (e) => {
@@ -669,36 +721,116 @@ export default function BillingPage() {
 
             {/* Section Filter Pills (Horizontal Scrollable) - Active when search is empty */}
             {!search.trim() && (
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1 border-t border-slate-100">
-                {sections.map((sec) => (
-                  <button
-                    key={sec}
-                    type="button"
-                    onClick={() => {
-                      setSelectedSection(sec);
-                      setSelectedCategory('All');
-                    }}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${
-                      selectedSection === sec
-                        ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
-                        : 'bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-700'
-                    }`}
-                  >
-                    {sec === 'All'
-                      ? '🌟 All Collections'
-                      : sec === 'Women'
-                      ? '👗 Women Wear'
-                      : sec === 'Kids Girls'
-                      ? '🎀 Kids Girls'
-                      : sec === 'Kids Boys'
-                      ? '👦 Kids Boys'
-                      : sec === 'Infants'
-                      ? '👶 Infant & Baby'
-                      : sec}
-                  </button>
-                ))}
-              </div>
+              <>
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1 border-t border-slate-100">
+                  {sections.map((sec) => (
+                    <button
+                      key={sec}
+                      type="button"
+                      onClick={() => {
+                        setSelectedSection(sec);
+                        setSelectedCategory('All');
+                      }}
+                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold shrink-0 transition active:scale-95 ${
+                        selectedSection === sec
+                          ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+                          : 'bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-700'
+                      }`}
+                    >
+                      {sec === 'All'
+                        ? '🌟 All Collections'
+                        : sec === 'Women'
+                        ? '👗 Women Wear'
+                        : sec === 'Kids Girls'
+                        ? '🎀 Kids Girls'
+                        : sec === 'Kids Boys'
+                        ? '👦 Kids Boys'
+                        : sec === 'Infants'
+                        ? '👶 Infant & Baby'
+                        : sec}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Category Grid Tiles — shown when a specific section is selected */}
+                {selectedSection !== 'All' && categories.length > 1 && (
+                  <div className="pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <Tag className="w-3.5 h-3.5 text-purple-500" />
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        Categories in {selectedSection}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                      {categories.map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setSelectedCategory(cat)}
+                          className={`px-2.5 py-2 rounded-xl text-[11px] font-bold transition text-center truncate border ${
+                            selectedCategory === cat
+                              ? 'bg-purple-600 text-white border-purple-600 shadow-sm ring-1 ring-purple-300'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700'
+                          }`}
+                        >
+                          {cat === 'All' ? '🌟 All' : cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
+
+            {/* Size & Price Filters */}
+            <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center gap-1.5">
+                <Filter className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Filter:</span>
+              </div>
+              {/* Size filter */}
+              <select
+                value={filterSize}
+                onChange={(e) => setFilterSize(e.target.value)}
+                className="px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-700 focus:ring-1 focus:ring-rose-500 bg-slate-50"
+              >
+                <option value="">All Sizes</option>
+                {allSizes.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              {/* Min price */}
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-400">₹ Min</span>
+                <input
+                  type="number"
+                  value={filterMinPrice}
+                  onChange={(e) => setFilterMinPrice(e.target.value)}
+                  placeholder="0"
+                  className="w-16 px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-700 focus:ring-1 focus:ring-rose-500 bg-slate-50"
+                />
+              </div>
+              {/* Max price */}
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold text-slate-400">₹ Max</span>
+                <input
+                  type="number"
+                  value={filterMaxPrice}
+                  onChange={(e) => setFilterMaxPrice(e.target.value)}
+                  placeholder="Any"
+                  className="w-16 px-2 py-1.5 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-700 focus:ring-1 focus:ring-rose-500 bg-slate-50"
+                />
+              </div>
+              {/* Clear filters */}
+              {(filterSize || filterMinPrice || filterMaxPrice) && (
+                <button
+                  onClick={() => { setFilterSize(''); setFilterMinPrice(''); setFilterMaxPrice(''); }}
+                  className="px-2 py-1 rounded-lg bg-red-50 text-red-600 text-[10px] font-bold hover:bg-red-100 transition"
+                >
+                  ✕ Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Product Cards Grid */}
