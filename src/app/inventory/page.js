@@ -43,6 +43,19 @@ const loadLS = (key, fallback) => {
 const saveLS = (key, val) => {
   try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
 };
+
+// Persist to MongoDB
+const saveSettingToDB = async (key, value) => {
+  try {
+    await fetch('/api/store-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value }),
+    });
+  } catch (err) {
+    console.error('Failed to persist setting to DB:', err);
+  }
+};
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function InventoryPage() {
@@ -82,7 +95,7 @@ export default function InventoryPage() {
   const [deleteProduct, setDeleteProduct] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  // ── Dynamic sections + categories (saved in localStorage) ─────────────────
+  // ── Dynamic sections + categories (saved in localStorage + MongoDB) ────────
   const [sections, setSections] = useState(() => loadLS(LS_SECTIONS, []));
   const [categoriesMap, setCategoriesMap] = useState(() => loadLS(LS_CATEGORIES, {}));
 
@@ -92,12 +105,36 @@ export default function InventoryPage() {
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryText, setNewCategoryText] = useState('');
 
+  // Load sections & categories from DB on mount (overrides localStorage if DB has data)
+  useEffect(() => {
+    const loadFromDB = async () => {
+      try {
+        const res = await fetch('/api/store-settings');
+        const data = await res.json();
+        if (data.success && data.settings) {
+          if (Array.isArray(data.settings.sections) && data.settings.sections.length > 0) {
+            setSections(data.settings.sections);
+            saveLS(LS_SECTIONS, data.settings.sections);
+          }
+          if (data.settings.categories && typeof data.settings.categories === 'object') {
+            setCategoriesMap(data.settings.categories);
+            saveLS(LS_CATEGORIES, data.settings.categories);
+          }
+        }
+      } catch (err) {
+        console.error('Could not load store settings from DB:', err);
+      }
+    };
+    loadFromDB();
+  }, []);
+
   const handleAddSection = () => {
     const name = newSectionText.trim();
     if (!name) { setAddingSection(false); setNewSectionText(''); return; }
     const updated = sections.includes(name) ? sections : [...sections, name];
     setSections(updated);
     saveLS(LS_SECTIONS, updated);
+    saveSettingToDB('sections', updated);
     const existingCats = categoriesMap[name] || [];
     setFormData((prev) => ({
       ...prev,
@@ -118,6 +155,7 @@ export default function InventoryPage() {
     const updatedMap = { ...categoriesMap, [sec]: updatedCats };
     setCategoriesMap(updatedMap);
     saveLS(LS_CATEGORIES, updatedMap);
+    saveSettingToDB('categories', updatedMap);
     setFormData((prev) => ({ ...prev, section: sec, category: name }));
     setAddingCategory(false);
     setNewCategoryText('');
@@ -128,6 +166,7 @@ export default function InventoryPage() {
     const updated = sections.filter((s) => s !== secToDelete);
     setSections(updated);
     saveLS(LS_SECTIONS, updated);
+    saveSettingToDB('sections', updated);
     // If the currently selected section in form is being deleted, switch to first remaining
     if (formData.section === secToDelete) {
       const nextSec = updated[0] || '';
@@ -144,6 +183,7 @@ export default function InventoryPage() {
     const updatedMap = { ...categoriesMap, [sec]: updatedCats };
     setCategoriesMap(updatedMap);
     saveLS(LS_CATEGORIES, updatedMap);
+    saveSettingToDB('categories', updatedMap);
     if (formData.category === catToDelete) {
       setFormData((prev) => ({ ...prev, category: updatedCats[0] || '' }));
     }
@@ -283,20 +323,22 @@ export default function InventoryPage() {
     const sec = formData.section?.trim() || (sections[0] || 'Women');
     const cat = formData.category?.trim() || (categoriesMap[sec] && categoriesMap[sec][0]) || 'General';
 
-    // Auto-save section to localStorage if not yet recorded
+    // Auto-save section to localStorage + DB if not yet recorded
     if (!sections.includes(sec)) {
       const updatedSecs = [...sections, sec];
       setSections(updatedSecs);
       saveLS(LS_SECTIONS, updatedSecs);
+      saveSettingToDB('sections', updatedSecs);
     }
 
-    // Auto-save category to localStorage if not yet recorded
+    // Auto-save category to localStorage + DB if not yet recorded
     if (cat && cat !== 'General') {
       const existingCats = categoriesMap[sec] || [];
       if (!existingCats.includes(cat)) {
         const updatedCats = { ...categoriesMap, [sec]: [...existingCats, cat] };
         setCategoriesMap(updatedCats);
         saveLS(LS_CATEGORIES, updatedCats);
+        saveSettingToDB('categories', updatedCats);
       }
     }
 

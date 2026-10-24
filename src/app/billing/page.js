@@ -1359,6 +1359,12 @@ export default function BillingPage() {
                   <span>Subtotal:</span>
                   <span>₹{lastSale.subtotal?.toLocaleString('en-IN')}</span>
                 </div>
+                {lastSale.totalDiscount > 0 && (
+                  <div className="flex justify-between text-rose-700 font-bold">
+                    <span>Discount:</span>
+                    <span>-₹{lastSale.totalDiscount?.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 {lastSale.roundOff !== 0 && (
                   <div className="flex justify-between text-slate-500">
                     <span>Round Off:</span>
@@ -1374,7 +1380,6 @@ export default function BillingPage() {
               {/* Footer Note */}
               <div className="text-center pt-4 border-t border-dashed border-slate-300 text-[10px] text-slate-500 space-y-0.5">
                 <p className="font-bold text-slate-700">Thank you for shopping at V.R. Fashion Palace!</p>
-                <p>Goods once sold can be exchanged within 7 days with bill.</p>
                 <p>*** Please Visit Again ***</p>
               </div>
             </div>

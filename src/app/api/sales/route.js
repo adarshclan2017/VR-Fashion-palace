@@ -52,6 +52,9 @@ export async function POST(request) {
     await connectDB();
     const body = await request.json();
     const { customer, items, paymentMode, paymentStatus, notes } = body;
+    // Accept client-provided totals (include bill-level discount)
+    const clientGrandTotal = body.grandTotal != null ? Number(body.grandTotal) : null;
+    const clientTotalDiscount = body.totalDiscount != null ? Number(body.totalDiscount) : 0;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ success: false, error: 'At least one item is required' }, { status: 400 });
@@ -151,8 +154,18 @@ export async function POST(request) {
       });
     }
 
-    const grandTotal = Math.round(subtotal);
-    const roundOff = Math.round((grandTotal - subtotal) * 100) / 100;
+    // Compute base subtotal from item-level calculations
+    const itemSubtotal = Math.round(subtotal * 100) / 100;
+
+    // Use the client-provided grandTotal (which includes bill-level discount) if given
+    // Otherwise fall back to item-calculated subtotal
+    const finalGrandTotal = (clientGrandTotal != null && clientGrandTotal >= 0)
+      ? Math.round(clientGrandTotal)
+      : Math.round(subtotal);
+    const finalTotalDiscount = clientTotalDiscount > 0
+      ? Math.round(clientTotalDiscount * 100) / 100
+      : Math.round(totalDiscount * 100) / 100;
+    const roundOff = Math.round((finalGrandTotal - subtotal) * 100) / 100;
 
     // Get the employee who created this bill
     let createdBy = { userId: '', username: '', displayName: 'Admin' };
@@ -177,11 +190,11 @@ export async function POST(request) {
         gstin: '',
       },
       items: processedItems,
-      subtotal: Math.round(subtotal * 100) / 100,
-      totalDiscount: Math.round(totalDiscount * 100) / 100,
+      subtotal: itemSubtotal,
+      totalDiscount: finalTotalDiscount,
       totalTax: 0,
       roundOff,
-      grandTotal,
+      grandTotal: finalGrandTotal,
       paymentMode: paymentMode || 'UPI',
       paymentStatus: paymentStatus || 'Paid',
       notes: notes || 'Thank you for shopping at V.R. Fashion Palace!',
